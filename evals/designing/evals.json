@@ -1,0 +1,23 @@
+{
+  "skill_name": "designing-distributed-system-tests",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just merged a fix titled 'Fix durable idempotent append replay' on a Rust distributed agent runtime (AgentDB) at /Users/lishen/work/agentdb-dst-verify. The fix touches the append + replay paths. Design a stability test plan for this change. Save it to docs/testing-plans/durable-idempotent-append-replay.md in that repo. Use the project's own runbooks and tooling where possible.",
+      "expected_output": "A plan file at the named path covering at minimum: append idempotency under client retry storm, replay equivalence after crash mid-append, duplicate suppression under asymmetric partition, durability after simulated fsync loss, concurrent forks observing the same append. Plan must cite catalog references and the project's own docs/runbooks/fault_injected.md and tools/agentdb-cluster-smoke.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I have a small Raft-based key-value store written in Go (~3k lines, no replication beyond the Raft library itself). I'm about to ship a new feature that lets clients change a key's TTL with the same idempotency guarantee the existing PUT has. Design a focused test plan for this feature. I do not have Jepsen integration yet — propose what to use without assuming Jepsen.",
+      "expected_output": "A plan that uses property-based testing for the TTL semantics, deterministic-simulation-style scheduling (or a clear acknowledgement that DST requires plumbing the library doesn't have yet), crash-recovery scenarios across the new IO boundary, and a note that linearizability checking with Elle/Porcupine over op histories would be the natural follow-up if/when Jepsen integration exists. Should NOT propose 'just run Jepsen' as if the user can.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Quick design check — I'm changing a typo in a log line and removing two unused imports in a stateless HTTP handler. What's the right test plan?",
+      "expected_output": "Early-exit. The skill should explicitly say 'this change does not warrant a distributed test plan' and recommend the lightest appropriate testing (e.g. existing unit tests, lint). Should NOT produce a ceremonial multi-scenario plan.",
+      "files": []
+    }
+  ]
+}

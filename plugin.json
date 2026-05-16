@@ -1,0 +1,11 @@
+{
+  "name": "distributed-testing-skills",
+  "version": "0.1.0",
+  "description": "Two coupled skills for designing and executing distributed-systems test plans, backed by a curated technique catalog distilled from Andrey Satarin's testing-distributed-systems repo and key research papers.",
+  "skills": [
+    "skills/designing-distributed-system-tests",
+    "skills/executing-distributed-system-tests"
+  ],
+  "author": "Li Shen",
+  "license": "MIT"
+}

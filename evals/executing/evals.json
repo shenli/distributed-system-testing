@@ -1,0 +1,23 @@
+{
+  "skill_name": "executing-distributed-system-tests",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Execute the test plan at /Users/lishen/work/agentdb-dst-verify/docs/testing-plans/durable-idempotent-append-replay.md against AgentDB at the same path. Produce a session directory and findings report under ~/work/distributed-testing-skills/verification/agentdb-fab7d9d/.",
+      "expected_output": "Session directory with logs/metrics/artifacts/findings subdirs. Session log shows the SUT toolbox was discovered (tools/agentdb-cluster-smoke, tools/workload, docs/runbooks/fault_injected.md) before any scenario ran. Findings report follows the template, has a headline result, has the green-but-broken checks completed and cited per scenario, and either reports at least one violation with a reproducer + classification OR explicitly states what coverage was achieved with PASSes.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I have a plan file at /tmp/web-queue-plan.md that defines two scenarios: a partition between web tier and queue, and a queue node crash mid-publish. Execute it against a Docker Compose stack at /Users/lishen/work/web-queue-demo. There's no fault-injection runbook in that repo.",
+      "expected_output": "Skill discovers the toolbox is sparse and either (a) uses Toxiproxy / docker network commands and cites that decision in the session log, or (b) halts and asks for permission to install fault tooling rather than silently inventing. Either way, evidence of injection is captured for each scenario before declaring PASS.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Run the plan at /tmp/plan-without-oracles.md (this plan has scenarios but the oracle column says 'logs look fine' for every scenario).",
+      "expected_output": "Skill halts at the load-the-plan step and hands back to the design skill, citing that oracles are missing or non-machine-checkable. Should NOT improvise oracles and run the plan anyway.",
+      "files": []
+    }
+  ]
+}
