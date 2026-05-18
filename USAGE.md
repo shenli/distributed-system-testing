@@ -10,10 +10,18 @@ will pick the right skill from a casual natural-language ask too —
 copying any prompt below. The explicit prompts here are for when
 you want a specific mode, output path, or scope.
 
+**Path-explicit by design.** The prompts below reference the
+SKILL.md at its install path (`~/.local/share/distributed-testing-skills/...`)
+instead of just the skill name. This works for any agent in any
+working directory — Claude Code, Codex, Copilot CLI, Cursor,
+Gemini — without depending on whether your agent auto-loaded the
+skill from `~/.claude/skills/` or `~/AGENTS.md`. If you installed
+the skills at a different path, substitute it.
+
 **Before you start: start your agent inside the SUT source
-directory.** Once the agent is in the SUT, the prompts below stop
-needing to spell out paths — the agent reads files, runs `git`,
-and walks the tree all from the current directory.
+directory.** Once the agent is in the SUT, the prompts stop
+needing to spell out the *SUT* path — the agent reads files, runs
+`git`, and walks the tree all from the current directory.
 
 ---
 
@@ -22,15 +30,17 @@ and walks the tree all from the current directory.
 ### Project-wide (holistic plan with claims, coverage matrix, confidence statement)
 
 ```
-Design a project-wide test plan for this codebase using the
-designing-distributed-system-tests skill.
+Use the workflow at
+~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/SKILL.md
+to design a project-wide test plan for this codebase.
 
 In scope: <list subsystems / crates / services to cover>
 Out of scope: <list with one-line reason each>
 
 Save the plan to ./testing-plans/<short-slug>.md.
 
-Required sections per the skill template:
+Required sections per the template at
+~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/assets/plan-template.md:
 §0 architectural summary, §1b claims, §1c missing-claims-discovered,
 §3 existing-test inventory, §5 coverage matrix (claim × hypothesis),
 §6b environment requirements, §7 scenarios named after the claim each
@@ -38,29 +48,34 @@ falsifies (including Target test file + Skeleton for executable-spec
 mode), §7b coverage adequacy argument, §7c residual uncertainty,
 §7d confidence statement.
 
-Walk the common-distributed-systems-pitfalls.md reference before
-generating hypotheses from intuition. Use conservative claims in §7d.
+Walk
+~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/references/common-distributed-systems-pitfalls.md
+before generating hypotheses from intuition. Use conservative claims
+in §7d.
 ```
 
 ### Change-scoped (a specific commit / PR / feature)
 
 ```
-Design a change-scoped test plan using the designing-distributed-system-tests
-skill.
+Use the workflow at
+~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/SKILL.md
+to design a change-scoped test plan.
 
 Change under test: <commit hash | PR #N | feature description>
 
 Save the plan to ./testing-plans/<short-slug>.md.
 
-Required sections per the skill template:
+Required sections per the template at
+~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/assets/plan-template.md:
 §0 architectural summary, §1b claims (limited to those the change
 touches), §3 existing tests for the touched surfaces, §4 hypotheses
 tied to claims, §6b environment requirements, §7 scenarios named
 after the claim each falsifies, §7b coverage adequacy, §7c residual
 uncertainty, §7d confidence statement using conservative claims.
 
-Walk the common-distributed-systems-pitfalls.md reference before
-generating hypotheses from intuition.
+Walk
+~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/references/common-distributed-systems-pitfalls.md
+before generating hypotheses from intuition.
 ```
 
 ---
@@ -70,9 +85,15 @@ generating hypotheses from intuition.
 ### Default mode (read-only on SUT, ephemeral harness under session dir)
 
 ```
-Execute the test plan at <path/to/plan.md> against this codebase
-using the executing-distributed-system-tests skill. Produce a session
-directory and findings report under ./test-sessions/<slug>/.
+Use the workflow at
+~/.local/share/distributed-testing-skills/skills/executing-distributed-system-tests/SKILL.md
+to execute the test plan at <path/to/plan.md> against this codebase.
+Produce a session directory and findings report under
+./test-sessions/<slug>/.
+
+Use the findings-report template at
+~/.local/share/distributed-testing-skills/skills/executing-distributed-system-tests/assets/findings-report-template.md
+verbatim for structure.
 
 Before probing my environment, ASK ME what tooling is available
 (Docker / podman? sudo for iptables? Toxiproxy? Go toolchain?
@@ -94,9 +115,11 @@ not a confidence verdict.
 ### Author mode (writes scenario skeletons into the SUT for review)
 
 ```
-Execute the test plan at <path/to/plan.md> in AUTHOR MODE using the
-executing-distributed-system-tests skill. Produce a session directory
-and findings report under ./test-sessions/<slug>/.
+Use the workflow at
+~/.local/share/distributed-testing-skills/skills/executing-distributed-system-tests/SKILL.md
+in AUTHOR MODE to execute the test plan at <path/to/plan.md> against
+this codebase. Produce a session directory and findings report under
+./test-sessions/<slug>/.
 
 The plan's §7 scenarios declare a Target test file and Skeleton for
 each one. In author mode, write the skeletons to those paths, fill
