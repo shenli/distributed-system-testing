@@ -126,9 +126,30 @@ ln -snf ~/.local/share/distributed-testing-skills/skills/executing-distributed-s
 # Codex / Copilot CLI / Cursor / Gemini / others: see INSTALL.md
 ```
 
-[`USING_WITH_CODEX.md`](USING_WITH_CODEX.md) has Codex-specific
-prompts (default + author-mode), if you want to drive the skills
-without auto-trigger.
+## Usage
+
+Once the skills are installed, you have two ways to drive them:
+
+**Casual ask (Claude Code with auto-trigger):**
+
+```
+Design a project-wide test plan for this codebase.
+```
+
+```
+Execute the plan at ./testing-plans/<slug>.md against this codebase.
+```
+
+The skill descriptions pick up natural phrasing like "design a
+test plan", "execute the plan", "run stability tests", "design a
+release validation plan", etc.
+
+**Copy/paste-ready prompts** (when you want a specific mode, output
+path, or want to drive a non-auto-trigger agent): see
+[`USAGE.md`](USAGE.md) for the canonical prompts for every
+workflow — design (project-wide / change-scoped), execute
+(default / author mode), update, plus tips on scope, env probing,
+and long-run checkpointing.
 
 ## The two skills
 
@@ -182,7 +203,9 @@ checklist. The catalog index pairs symptoms to references.
 .
 ├── plugin.json                                 ← optional plugin manifest
 ├── README.md                                   ← this file
-├── USING_WITH_CODEX.md                          ← Codex-specific workflow
+├── INSTALL.md                                  ← idempotent install / update (paste-this)
+├── USAGE.md                                    ← copy/paste prompts for every workflow
+├── LICENSE
 ├── skills/
 │   ├── designing-distributed-system-tests/
 │   │   ├── SKILL.md                            ← the design workflow
