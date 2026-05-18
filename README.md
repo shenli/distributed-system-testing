@@ -110,11 +110,6 @@ run — no duplication.
 If you have local edits to the cloned skills, `git pull --ff-only`
 will fail; the agent will stop and ask before discarding them.
 
-> **Private-repo note.** Until this repo is public, the URL above
-> requires the agent to authenticate to GitHub (e.g. via `gh api`).
-> If your agent can't fetch the URL, fall back to a manual `git
-> clone` and run [`INSTALL.md`](INSTALL.md) by hand.
-
 ### Manual install (if you'd rather see what's happening)
 
 ```bash
