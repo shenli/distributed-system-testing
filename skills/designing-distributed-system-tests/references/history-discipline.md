@@ -113,6 +113,11 @@ failure, and *unknown*. The history must model unknowns first-class.
 
 ## Picker table: model → required fields
 
+All 11 default-schema fields should be recorded for every serious
+scenario; the rows below highlight the fields most critical to the
+checker chosen for each model — drop them and the checker becomes
+unsound for that model.
+
 | Model | Required fields beyond the core minimum |
 |---|---|
 | register (single key) | `node_seen` (for per-replica linearizability) |
