@@ -21,6 +21,12 @@ Faults must (a) actually fire, (b) produce evidence they fired, and
 | Packet loss | `tc qdisc add … netem loss 30%` | netem stats, RPC retries | `tc qdisc del` |
 | Latency injection | `tc … netem delay 200ms` | RPC latency histogram shift | `tc qdisc del` |
 | Bandwidth cap | `tc … htb rate 1mbit` | throughput drop | `tc qdisc del` |
+| Minority-side partition | iptables drop minority↔majority in both dirs | RPC timeouts on minority; majority continues | reverse iptables |
+| Majority-side partition | invert above: drop traffic into majority from minority + outside | majority quorum fails to make progress | reverse iptables |
+| Leader isolation | partition just the current leader (identified live from cluster status); both other-sides keep talking | leader sees its peers go silent; quorum re-elects | reverse the rule when re-election completes |
+| Packet duplication | `tc qdisc add … netem duplicate 10%` | duplicate-packet counter, double-RPC counters | `tc qdisc del` |
+| Packet reordering | `tc qdisc add … netem reorder 25% delay 50ms` | out-of-order arrival counter | `tc qdisc del` |
+| Metadata-store outage | drop traffic to etcd / ZK / DNS by IP+port | dependent ops fail with metadata-unreachable errors | reverse |
 
 **Always verify the fault landed.** A common failure: `iptables`
 rule lives in the wrong chain, or `tc` qdisc is on the wrong
@@ -35,6 +41,9 @@ victim and put both in the session log.
 | fsync loss / power loss | torturing-databases-style block tracer, or filesystem with `nobarrier`, or simulated via process kill between write and fsync | crash, mismatch on recovery | reset disk image |
 | Slow disk | `cgroup` IO throttling | IO latency histogram shift | remove throttle |
 | Bit flip on read / write | dm-flakey, dm-error, or in-app injection | checksum failures | remove dm target |
+| fsync failure | dm-flakey configured to drop fsync; or eatmydata; or syscall interception | crash-recovery uncovers lost writes | remove dm target / disable interception |
+| Storage corruption (typed) | dm-flakey returning EIO; or dm-error; or bitrot via dd if=/dev/urandom into the device | SUT surfaces checksum / integrity errors | remove dm target |
+| Backup/restore race | trigger backup mid-workload, then restore mid-workload, then continue | restore-time markers in log; oracle compares pre/post replicas | wait for restore to complete |
 
 ## Time faults
 
@@ -45,11 +54,17 @@ victim and put both in the session log.
 
 ## Cluster-level faults
 
-- **Rolling restart, wrong order:** state-machine bugs that hide
-  when restart order matches leadership order.
-- **Split-brain:** combine partition with leadership timeout pressure.
-- **Slow follower:** latency injection on one node only — exposes
-  back-pressure and head-of-line blocking.
+| Fault | Mechanism | Evidence | Cleanup |
+|---|---|---|---|
+| Rolling restart, wrong order | restart nodes in an order that crosses leadership transitions | leadership changes during restarts; counts in raft / consensus metrics | finish the restart cycle |
+| Split-brain attempt | combine partition with leadership timeout pressure | competing-leader log lines on both sides | end the partition |
+| Slow follower | latency injection (`tc netem`) on one node only | RPC latency histogram skew per node; back-pressure metrics on others | `tc qdisc del` |
+| Mixed-version cluster | bring half the nodes up on version N, half on N+1 | version-mismatch log lines; cluster membership view | finish the upgrade or roll back |
+| Rolling upgrade | upgrade nodes one at a time; workload keeps running | per-node version flip in cluster status; workload error rate | finish the upgrade |
+| Config divergence | one node has a different config value the SUT does not gossip | reachability of config via SUT introspection; divergent behavior per node | reset the config |
+| Credential / auth divergence | rotate auth secret on N-1 nodes, leave one stale | auth-failure counter on the stale node | rotate the last node |
+| Compaction / GC during reads | trigger compaction (storage-engine specific) while a high-read workload is mid-flight | compaction-active log line; read latency histogram skew | wait for compaction to complete |
+| Rebalancing / reconfiguration during writes | trigger a shard rebalance or membership change during a sustained write workload | rebalance-in-progress metric; per-shard ownership transitions | wait for rebalance to complete |
 
 ## Anti-patterns
 
