@@ -4,6 +4,19 @@ Use this single-page taxonomy (after TaxDC, Leesatapornwongsa et al.,
 ASPLOS'16) to label every finding. Consistent labels make findings
 searchable across runs and across projects.
 
+**Two orthogonal axes.** This file classifies the **type of bug**
+(timing / ordering / partition / …) once a finding exists. It does
+**not** classify the **test outcome** — for that, see
+`verdict-taxonomy.md` (PASS-smoke / PASS-hardening / FAIL-reproducible
+/ FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak
+/ INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model).
+Nor does it classify the **component** holding the bug — for that,
+see the "Classify blame before filing" section of
+`test-case-reduction.md` (SUT / harness / checker / environment).
+A finding has all three: a verdict (from the run), a reduction
+classification (after reduction), and a TaxDC type (the categories
+below).
+
 ## Top-level category (pick one)
 
 - **Timing** — depends on relative timing of events (slow node,
