@@ -175,6 +175,13 @@ your hypotheses. For each technique you pick, open its reference file
 and write down in the plan: which hypotheses it addresses, what it
 would catch that other techniques would miss, the typical cost.
 
+For scenarios that will be serious (any claim in `{safety, durability,
+idempotency, isolation, ordering, membership}`), also open the
+executing skill's `references/oracle-patterns.md` and use the
+"Checker picker" table at the top to pick the checker(s) matching
+your model and claim category. The checker choice is part of the
+plan, not a runtime decision.
+
 A change usually warrants 2–4 techniques in combination. One technique
 is suspicious — re-check whether you've collapsed multiple distinct
 hypotheses into one. A project-wide plan typically reaches further
@@ -266,6 +273,37 @@ The skeleton is what the executing skill (in author mode) writes
 to the target path and then fills the TODOs from. The plan +
 the generated test are traceable back to each other; if the
 plan's prose changes, the test should be regenerated.
+
+**Fill §7.M for serious scenarios.** If any claim in this scenario's
+`Falsifies if it FAILs` row belongs to `{safety, durability,
+idempotency, isolation, ordering, membership}`, the scenario is
+*serious* and must fill the §7.M sub-block in the plan template:
+
+- **Model under test** — pick from the picker in
+  `references/history-discipline.md`.
+- **Operation history** — which of the default 11 fields the recorder
+  captures; the recording mechanism (in-process / external / server-
+  side / combined).
+- **Checker** — name from the executing skill's
+  `references/oracle-patterns.md` "Checker picker" table at the top
+  of that file. Or, if no checker, write the justification.
+- **Nemesis + landing evidence** — nemesis from the executing skill's
+  `references/fault-injection-howto.md`, plus the observable signal
+  that proves the fault landed.
+- **Ambiguous outcomes** — how the recorder treats timeouts, unknowns,
+  retries, duplicates.
+- **Reduction plan** — minimisation recipe + the SUT/harness/checker/
+  env classification step from the executing skill's
+  `references/test-case-reduction.md`.
+
+For non-serious scenarios (perf-SLO, liveness, operational), write
+`§7.M: not applicable (no gated claim category falsified)` and move
+on. Do not invent a model just to fill the field.
+
+The §7d confidence statement should lean on the chain ("checker X
+consumed history Y under nemesis Z with landing evidence E") for
+every serious scenario. A serious scenario whose §7.M is partially
+filled cannot contribute to a hardening claim.
 
 ### 5b. Argue coverage adequacy
 
@@ -365,10 +403,18 @@ a ceremonial plan for changes that don't need one.
 - `references/property-and-metamorphic.md`
 - `references/performance-and-benchmarking.md`
 - `references/crash-recovery-and-upgrade.md`
+- `references/common-distributed-systems-pitfalls.md` — 16 pitfalls
+  with hypothesis templates (walk this during step 3)
+- `references/history-discipline.md` — operation-history schema and
+  ambiguous-outcome handling (required reading when any scenario
+  will be serious)
 
 Each reference file follows the same shape: when to reach for it,
 what it detects well, what it misses, concrete tools, papers,
-cost / wall-clock signal, plan checklist.
+cost / wall-clock signal, plan checklist. The discipline references
+(`common-distributed-systems-pitfalls.md`, `history-discipline.md`)
+instead follow an enumeration + anti-pattern shape — they are walked
+exhaustively rather than picked from.
 
 ## Asset
 
