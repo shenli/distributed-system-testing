@@ -18,9 +18,11 @@ in-process test plus an external workload, for example), give each
 its own row with `S1 Driver A` / `S1 Driver B` IDs so verdicts and
 evidence do not get conflated.
 
-| ID | Scenario | Result | Oracle | Oracle execution evidence | Artifact link |
-|---|---|---|---|---|---|
-| S1 | {{name}} | PASS / FAIL / INCONCLUSIVE | {{property checked}} | {{e.g. "assertion fired 1000/1000", "Elle processed 4217 ops 0 anomalies", "INCONCLUSIVE — env lacks Docker"}} | {{link to session log entry + artifacts}} |
+| ID | Scenario | [Verdict][vt] | Oracle | Oracle execution evidence | Nemesis landing evidence | Artifact link |
+|---|---|---|---|---|---|---|
+| S1 | {{name}} | PASS-hardening / PASS-smoke / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model | {{property checked}} | {{e.g. "assertion fired 1000/1000", "Elle processed 4217 ops 0 anomalies"}} | {{e.g. "iptables counter 0→14,712 over the injection window; SUT raft log shows leader-lost", or "n/a — no fault (PASS-smoke)"}} | {{link to session log entry + artifacts}} |
+
+[vt]: ../references/verdict-taxonomy.md
 
 ## Findings
 
@@ -31,6 +33,10 @@ evidence do not get conflated.
 - **What happened:** one paragraph, factual.
 - **Reproducer:** the minimal fault sequence that reproduces. If you
   did not minimize, say so and why.
+- **Reduction classification:** SUT / harness / checker / environment
+  (pick exactly one per the "Classify blame before filing" section of
+  `references/test-case-reduction.md`). "Unknown — pending re-run on
+  alternative harness/host" is acceptable as an interim value.
 - **Classification:** timing / ordering / partition / crash-recovery
   / config / upgrade / fault-handling / performance (pick the closest
   from `references/finding-classification.md`).
@@ -86,8 +92,30 @@ State the result of each red-flag check from
 `references/green-but-broken-red-flags.md`. A scenario marked PASS
 without these checks completing is not actually PASS.
 
+Per scenario (cite evidence per checked item):
+
 - [ ] Workload generator produced the expected ops/sec throughout
-- [ ] Oracle ran on every intended cycle
-- [ ] Faults verifiably injected (cite evidence)
+- [ ] Oracle ran on every intended cycle (cite the op count it
+  consumed)
+- [ ] Faults verifiably injected (cite the landing-evidence signal
+  declared in §7.M)
 - [ ] Clock skew did not silently mask the timing assertion
 - [ ] Run duration met the plan's exit criterion
+- [ ] No silent error suppression (grep'd SUT log for swallowed
+  panics)
+- [ ] Recovery completed (post-fault, SUT returned to nominal —
+  not "stayed up degraded")
+
+Per-scenario weak-oracle audit (any unchecked → not eligible for
+`PASS-hardening`):
+
+- [ ] Oracle is not "final state only"
+- [ ] Oracle is not "logs only"
+- [ ] Oracle is not "health checks only"
+- [ ] If failover-based, more than one failover was exercised
+- [ ] Recorder caught client-library-hidden retries (or N/A — the
+  library does not hide retries)
+- [ ] Timestamps are monotonic, not wall-clock
+- [ ] At least one fault-set variant (asymmetric, mixed-version,
+  etc.) was covered if applicable
+- [ ] At least three PRNG seeds tried for any statistical claim
