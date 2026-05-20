@@ -304,8 +304,7 @@ checklist. The catalog index pairs symptoms to references.
 │                                                 verdict-taxonomy (9-state)
 ├── evals/                                      ← eval suites for both skills
 ├── verification/                               ← real runs against AgentDB (concrete output)
-├── specs/                                      ← original design spec
-└── plans/                                      ← original implementation plan
+└── specs/                                      ← original design spec
 ```
 
 ## Status
