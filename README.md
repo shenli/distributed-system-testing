@@ -1,28 +1,25 @@
 # distributed-testing-skills
 
-**A Jepsen-style discipline for distributed-systems testing, packaged
-as two skills any AI coding agent can run.** You drive your agent
-through it; it emits a structured Markdown plan with claims,
-hypotheses, scenarios bound to a model-and-checker discipline, and a
-findings report with 9-state verdicts plus an explicit SUT / harness /
-checker / environment blame classification.
+**Two skills for AI coding agents that design and run claim-driven
+tests for distributed and stateful systems.** Together they produce a
+structured Markdown test plan and a findings report with 9-state
+verdicts and an explicit SUT / harness / checker / environment blame
+classification. A reviewer reads the two artifacts and decides
+whether to ship; nothing else has to be re-run.
 
-Works with Claude Code, Codex, Copilot CLI, Cursor, Gemini, or
-anything else that can read Markdown and run shell commands. The
-discipline lives in plain SKILL.md files and reference catalogs; the
-AI agent is the executor, not the protagonist — the artifact (plan +
-findings report) is reviewable on its own without re-running anything.
+Works with Claude Code, Codex, Copilot CLI, Cursor, Gemini, or any
+agent that reads Markdown and runs shell. The skills are plain
+SKILL.md files. The agent executes them; the plan and findings
+report are the output.
 
-One skill designs the plan. One skill executes it. The plan reads
-like a Jepsen-style analysis: claims first, then hypotheses, then
-scenarios each named after the claim it tries to falsify, each tying
-an abstract model (`register | queue | log | lock | lease | ledger |
-…`) to an operation-history schema, a named checker, and a nemesis
-that carries explicit *landing evidence* — the observable signal
-proving the fault actually fired. The plan ends with a coverage
-adequacy argument and a conservative confidence statement: a
-reviewer can read it and decide whether to ship without re-running
-the tests.
+One skill designs the plan. The other runs it. A plan starts from
+the product's claims, generates hypotheses tied to those claims, and
+writes scenarios named after the claim each tries to falsify. For
+consistency-critical scenarios, each scenario also binds an abstract
+model (`register | queue | log | lock | lease | ledger | …`) to an
+operation-history schema, a named checker, and a nemesis with
+observable landing evidence. The plan ends with a coverage adequacy
+argument and a conservative confidence statement.
 
 ## Why
 
@@ -36,35 +33,29 @@ These skills enforce an opinionated workflow that pulls from the
 field's hard-won knowledge:
 
 - **Claim-driven, not test-driven.** Start from what the product
-  *promises* its users. Every scenario exists to falsify a specific
-  claim under a specific fault. A test named after its claim is
-  harder to weaken than one named after its setup.
+  promises. Every scenario falsifies one claim under one fault. A
+  test named after its claim is harder to weaken than one named
+  after its setup.
 - **Coverage adequacy is a deliverable.** The plan ends with an
-  explicit argument that the chosen scenarios are *enough* to ship,
-  plus an honest residual-uncertainty list of what stays unverified.
+  argument that the chosen scenarios are *enough* to ship, plus an
+  honest list of what stays unverified.
 - **Reuse the SUT's own toolbox.** The execute skill discovers
   existing tests, runbooks, and fault-injection scaffolding before
   inventing anything new.
-- **Model + history + checker, not just chaos.** For every scenario
-  that falsifies a claim in `{safety, durability, idempotency,
-  isolation, ordering, membership}`, the plan must declare an
-  abstract model under test, an explicit operation-history schema,
-  a named checker (linearizability / serializability / session-
-  consistency / monotonic-read / prefix-order / no-lost-ack /
-  exactly-once / invariant-over-final-state / reconciliation /
-  …), and how the run treats ambiguous outcomes (timeouts, unknown
-  commits, retries, duplicate responses). Chaos alone is not the
-  discipline — chaos *plus* a precise model and checker is.
+- **Model + history + checker, not just chaos.** For safety,
+  durability, idempotency, isolation, ordering, or membership
+  claims, every scenario declares an abstract model, an
+  operation-history schema, a named checker (linearizability,
+  serializability, session-consistency, no-lost-ack, exactly-once,
+  …), and how it treats ambiguous outcomes (timeouts, unknown
+  commits, retries). Chaos plus a model and a checker, not chaos
+  alone.
 - **No silent passes.** Every PASS cites oracle execution evidence
-  *and* the landing-evidence signal proving the fault actually
-  fired. Verdicts are 9-state — `PASS-smoke`, `PASS-hardening`,
-  `FAIL-reproducible`, `FAIL-nondeterministic`, `INCONCLUSIVE-env`,
-  `INCONCLUSIVE-oracle-too-weak`, `INCONCLUSIVE-fault-not-proven`,
-  `PARTIAL-surface`, `PARTIAL-model` — so "the chaos script ran
-  cleanly" cannot be confused with "the claim survived the proven
-  fault." Every FAIL also carries a SUT / harness / checker /
-  environment blame classification, so reproducers reach the right
-  queue.
+  *and* the signal proving the fault actually fired. Verdicts come
+  from a 9-state set, so "the chaos script ran cleanly" can't be
+  read as "the claim survived the fault." Every FAIL carries a
+  SUT / harness / checker / environment blame tag so reproducers
+  reach the right queue.
 
 ## What you get
 
@@ -161,9 +152,8 @@ see `skills/executing-distributed-system-tests/assets/findings-report-template.m
 
 ## Install (one line, any agent)
 
-Paste this at any AI coding agent — Claude Code, Codex, Copilot CLI,
-Cursor, Gemini, or anything else that can read Markdown and run shell
-commands:
+Paste this at any AI coding agent (Claude Code, Codex, Copilot CLI,
+Cursor, Gemini, or anything else that reads Markdown and runs shell):
 
 ```
 Read https://raw.githubusercontent.com/shenli/distributed-system-testing/main/INSTALL.md
@@ -172,13 +162,13 @@ distributed-testing-skills for this agent.
 ```
 
 The agent fetches [`INSTALL.md`](INSTALL.md), clones the repo to
-`~/.local/share/distributed-testing-skills/`, and wires the skills
-into the agent — symlinks under `~/.claude/skills/` for Claude
-Code, a pointer block in `~/AGENTS.md` for other agents.
+`~/.local/share/distributed-testing-skills/`, and wires the skills in
+(symlinks under `~/.claude/skills/` for Claude Code, a pointer block
+in `~/AGENTS.md` for other agents).
 
-After that, the skills trigger automatically: ask any agent on the
-machine to "design a test plan for this system" or "execute the
-plan at X", and it'll follow the SKILL.md workflow.
+After that, ask any agent on the machine to "design a test plan for
+this system" or "execute the plan at X" and it'll follow the
+SKILL.md workflow.
 
 ### Update
 
@@ -226,46 +216,42 @@ The skill descriptions pick up natural phrasing like "design a
 test plan", "execute the plan", "run stability tests", "design a
 release validation plan", etc.
 
-**Copy/paste-ready prompts** (when you want a specific mode, output
-path, or want to drive a non-auto-trigger agent): see
-[`USAGE.md`](USAGE.md) for the canonical prompts for every
-workflow — design (project-wide / change-scoped), execute
-(default / author mode), update, plus tips on scope, env probing,
-and long-run checkpointing.
+For a specific mode, output path, or a non-auto-trigger agent,
+[`USAGE.md`](USAGE.md) has copy/paste prompts for every workflow
+(design and execute, in their respective modes) plus tips on scope,
+env probing, and long-run checkpointing.
 
 ## The two skills
 
 ### `designing-distributed-system-tests`
 
-Given a system and a change (or "project-wide" for a holistic plan),
-walks the repo, extracts the claims the product makes, generates
+Walks the repo, extracts the claims the product makes, generates
 hypotheses tied to those claims, picks techniques from the catalog,
 and writes a structured Markdown plan with a coverage adequacy
-argument and a confidence statement. For every scenario whose claim
-falls in the gated set, the plan is required to fill the §7.M
-model / history / checker / nemesis-and-landing-evidence /
-ambiguous-outcomes / reduction-plan block — see
-[`skills/designing-distributed-system-tests/references/history-discipline.md`](skills/designing-distributed-system-tests/references/history-discipline.md).
+argument and a confidence statement. For consistency-critical
+scenarios, the plan fills a §7.M block per scenario: model under
+test, operation-history schema, named checker, nemesis + landing
+evidence, ambiguous-outcome handling, reduction plan. Details:
+[`history-discipline.md`](skills/designing-distributed-system-tests/references/history-discipline.md).
 
-Two modes: **change-scoped** (a specific commit / PR / feature) and
+Two modes: **change-scoped** (a specific commit or PR) and
 **project-wide** (a holistic plan with existing-test inventory and
 gap analysis).
 
 ### `executing-distributed-system-tests`
 
-Given a plan file, discovers the SUT's toolbox, probes the
-environment (asking the operator first), runs scenarios with
-checkpoint discipline, captures landing evidence per fault, applies
-the green-but-broken and weak-oracle audits, assigns a 9-state
-verdict per the decision tree in
-[`skills/executing-distributed-system-tests/references/verdict-taxonomy.md`](skills/executing-distributed-system-tests/references/verdict-taxonomy.md),
-classifies every FAIL into SUT / harness / checker / environment
-before filing, and produces a findings report with adequacy-vs-plan
+Reads the plan, discovers the SUT's toolbox, probes the environment,
+and runs scenarios with checkpoint discipline. Per scenario: captures
+landing evidence for the fault, runs the green-but-broken and
+weak-oracle audits, assigns a verdict from the 9-state taxonomy in
+[`verdict-taxonomy.md`](skills/executing-distributed-system-tests/references/verdict-taxonomy.md),
+and classifies every FAIL into SUT / harness / checker / environment
+before filing. Produces a findings report with adequacy-vs-plan
 assessment and confidence delta.
 
 Two modes: **default** (read-only on the SUT, ephemeral harnesses
-under the session dir) and **author mode** (writes scenario
-skeletons declared in the plan's §7 into the SUT for review).
+under the session dir) and **author mode** (writes scenario skeletons
+declared in the plan's §7 into the SUT for review).
 
 ## Technique catalog
 
@@ -331,18 +317,18 @@ as a PR, two open). The skill bodies evolve as harness experience
 accumulates; expect minor updates to the SKILL.mds and templates
 over the next few iterations.
 
-**Read the artifacts before installing.** Real plan outputs, session
-directories, and findings reports from those runs live under
-[`verification/`](verification/) — one subdirectory per run, each
-with a `README.md` describing what passed, what failed, and what the
-skill surfaced about itself in the process. Notable runs:
+Real plan outputs, session directories, and findings reports from
+those runs live under [`verification/`](verification/), one
+subdirectory per run, each with a `README.md` describing what
+passed, what failed, and what the skill surfaced about itself in
+the process. Notable runs:
 
 - [`verification/agentdb-fab7d9d/`](verification/agentdb-fab7d9d/) —
   change-scoped plan + execution for AgentDB commit `fab7d9d` (durable
   idempotent append replay); 670-line plan with 16 hypotheses across
   all eight failure-mode categories.
 - [`verification/agentdb-jepsen/`](verification/agentdb-jepsen/) —
-  Jepsen-style consistency + crash-recovery run.
+  consistency + crash-recovery run with linearizability checking.
 - [`verification/agentdb-projectwide-lidev/`](verification/agentdb-projectwide-lidev/)
   and `-v2` — project-wide plans with full coverage matrix +
   adequacy argument + confidence statement.
