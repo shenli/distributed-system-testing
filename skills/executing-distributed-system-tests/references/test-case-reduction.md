@@ -32,3 +32,43 @@ it to the smallest fault sequence that still reproduces.
   to not change the outcome on a given seed. Keep at least one
   event from each fault category in the reproducer if the bug
   depends on the category.
+
+## Classify blame before filing
+
+A reduced reproducer is not a bug report yet. The same reproducer
+can mean different things depending on what's broken — and sending
+the bug to the wrong place wastes engineering time. After reduction,
+classify the bug into exactly one of:
+
+- **SUT bug.** The system under test honoured the workload but violated
+  the claim. Goes to the SUT team.
+- **Harness bug.** The workload generator, fault injector, or scheduler
+  introduced an artifact the SUT did not actually produce. Goes back to
+  the test-harness queue.
+- **Checker bug.** The oracle reported a violation that the data does
+  not in fact support — wrong model, off-by-one in the property,
+  mishandled timeout marker. Goes back to the checker queue.
+- **Environment bug.** Kernel scheduler quirk, driver bug, filesystem
+  config, cgroup limit, virtualization artifact. Goes to the
+  infrastructure / platform queue.
+
+### Representative tells
+
+| Class | Tells |
+|---|---|
+| SUT bug | Reproducer survives swapping the workload generator. Reproducer reproduces against the SUT's stated single-binary smoke harness. Bug aligns with a known TaxDC category. |
+| Harness bug | Reproducer disappears when the workload generator is replaced with a different one targeting the same SUT API. Logs show the generator sent operations the SUT API does not accept (or in the wrong format). |
+| Checker bug | The "violation" makes sense if you allow a documented relaxation the checker does not encode (e.g., bounded staleness allowed; checker assumed linearizable). Re-running the checker on a known-good history also flags a violation. |
+| Environment bug | Reproducer disappears on a different host / kernel / FS / cloud-region. Bug timing aligns with host-level events (cgroup throttle, hypervisor pause, NTP step). |
+
+### Recording the classification
+
+Each FAIL finding's report block carries a `Reduction classification:`
+field (one of SUT / harness / checker / environment) immediately before the
+TaxDC `Classification:` field. The two are orthogonal — TaxDC says
+*what kind* of bug; reduction classification says *which component*
+holds the bug. Both are required.
+
+A classification you are not yet sure about is `Reduction
+classification: unknown — pending re-run on alternative harness/host`.
+That is honest. A guess that turns out wrong is not.

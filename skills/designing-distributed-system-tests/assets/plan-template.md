@@ -47,7 +47,8 @@ The spine of the plan. List every guarantee the SUT promises its
 users — extracted from docs, API reference, code comments, error
 types, existing test names. Categorise (safety / liveness /
 durability / performance-SLO / operational / idempotency /
-isolation). Mark inferred claims as `(inferred)`.
+isolation / ordering / membership). Mark inferred claims as
+`(inferred)`.
 
 | ID | Claim | Category | Source | Inferred? |
 |---|---|---|---|---|
@@ -228,6 +229,44 @@ and runs.
   The skeleton is intentionally minimal: imports, function
   signature, three TODO regions matching the prose fields. The
   executing skill expands the TODOs in author mode.
+
+#### §7.M — Model / history / checker discipline
+
+Mandatory if any claim referenced in this scenario's `Falsifies if it
+FAILs` row is in `{safety, durability, idempotency, isolation,
+ordering, membership}`. Otherwise: write `§7.M: not applicable (no
+gated claim category falsified)` and skip the fields below.
+
+- **Model under test:** `register | map | queue | log | lock | lease | session | membership-table | counter | ledger | other(<name>)`
+  — see `references/history-discipline.md` for what each model implies
+  about checker choice.
+- **Operation history:** which of the default 11 fields (op id,
+  process id, invoke/complete ts, op type, key, input, output, error,
+  timeout marker, node seen, fault epoch) the recorder captures; any
+  scenario-specific extensions; the recording mechanism (in-process
+  / external probe / server-side audit / combined). Default schema
+  reference: `references/history-discipline.md`.
+- **Checker:** name from the executing skill's
+  `references/oracle-patterns.md` (Checker picker table at the top
+  maps model + claim category → checker). If this scenario has no
+  checker, write a 1–2 sentence justification for why the alternative
+  oracle (assertion / SLO threshold / final-state invariant) is
+  strong enough on its own.
+- **Nemesis + landing evidence:** the nemesis name (see executing
+  skill's `references/fault-injection-howto.md` taxonomy), plus the
+  *observable signal* that proves the fault landed (RPC timeout rate
+  jump, iptables packet counter, log marker, partition-status
+  metric). "The injector reported success" is not landing evidence.
+- **Ambiguous outcomes:** how the recorder treats timeouts, unknown
+  commits, retries, and duplicate responses. Default: timeouts get
+  `timeout_marker = true` with `complete_ts = null`; retries are
+  separate ops sharing `input`; duplicates are an error in the
+  recorder. Any scenario-specific deviation goes here.
+- **Reduction plan:** if this scenario FAILs, the minimization recipe.
+  Target smallest cluster size + shortest fault window + minimum op
+  mix + deterministic seed that still reproduces. After reduction,
+  classify into one of SUT / harness / checker / environment per the
+  executing skill's `references/test-case-reduction.md`.
 
 ### Scenario S2: ...
 
