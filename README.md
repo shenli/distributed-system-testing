@@ -1,4 +1,4 @@
-# distributed-testing-skills
+# Distributed Systems Testing Skills
 
 **Two skills for AI coding agents that design and run claim-driven
 tests for distributed and stateful systems.** Together they produce a
