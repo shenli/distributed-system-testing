@@ -47,7 +47,8 @@ The spine of the plan. List every guarantee the SUT promises its
 users — extracted from docs, API reference, code comments, error
 types, existing test names. Categorise (safety / liveness /
 durability / performance-SLO / operational / idempotency /
-isolation). Mark inferred claims as `(inferred)`.
+isolation / ordering / membership). Mark inferred claims as
+`(inferred)`.
 
 | ID | Claim | Category | Source | Inferred? |
 |---|---|---|---|---|
