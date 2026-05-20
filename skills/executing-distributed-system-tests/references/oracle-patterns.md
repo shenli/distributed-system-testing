@@ -26,7 +26,8 @@ sections below for how to actually run the chosen checker.
 
 If the scenario's model is not in this table, pick the closest row
 and write down in §7.M why the checker still applies (or pick "no
-checker" and justify per the §7.M instructions).
+checker" and justify per the §7.M block in the designing skill's
+`assets/plan-template.md`).
 
 ## Patterns, with when to use each
 

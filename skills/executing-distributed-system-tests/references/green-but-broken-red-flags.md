@@ -68,7 +68,8 @@ regression."
 - **Client libraries that hide retries.** If the library transparently
   retries, the in-process history undercounts the network ops the
   SUT actually saw. Pair in-process recording with a network-side
-  tap (see `history-discipline.md` Recording mechanisms).
+  tap (see `history-discipline.md` in the design skill, Recording
+mechanisms section).
 - **Wall-clock timestamps.** Two clients with skewed clocks make
   a correct system look inconsistent. Use a monotonic clock source
   per recorder, or use server-receive timestamps as the canonical

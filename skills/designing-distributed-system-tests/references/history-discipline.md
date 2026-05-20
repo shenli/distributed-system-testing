@@ -46,6 +46,10 @@ type does not use are recorded as null, not omitted.
 | `node_seen` | Which node / leader / route the client talked to. Required for replication and membership claims. |
 | `fault_epoch` | Identifier of the fault window active during the op (`null` if no fault was active). |
 
+The schema is described as "11 fields" because `invoke_ts` and
+`complete_ts` are a single conceptual slot (an op's lifetime); the
+table lists them on separate rows for ease of reference.
+
 The `fault_epoch` field is the most-skipped one and the most-load-
 bearing for partition / partial-failure analyses: without it, the
 checker cannot tell whether an anomaly happened under fault or not.

@@ -39,7 +39,7 @@ The checker found a violation that re-runs deterministically on the
 same seed / config / fault sequence.
 
 File as a finding immediately. Apply `references/test-case-reduction.md`
-and the SUT/harness/checker/env classification before moving on.
+and the SUT/harness/checker/environment classification before moving on.
 
 ### `FAIL-nondeterministic`
 
@@ -142,6 +142,12 @@ Did any FAIL register?
         │           ├─ no  → PASS-smoke
         │           └─ yes → PASS-hardening
 ```
+
+**Non-serious scenarios.** If §7.M was marked "not applicable" (the
+scenario does not falsify a claim in the gated set), the tree's
+checker-required nodes do not apply. Use the scenario's Oracle
+field as the success criterion: smoke run → `PASS-smoke`; fault
+active + Oracle passed → `PASS-hardening`.
 
 `INCONCLUSIVE-env` is a pre-run verdict: the scenario never started
 because the environment lacked a capability. Assign before entering

@@ -84,8 +84,15 @@ Categorise each claim:
   "configuration changes are atomic"
 - **Idempotency / dedup** — "same idempotency key never produces
   two committed effects"
-- **Privacy / isolation** — "tenant A's reads never observe tenant
-  B's writes"
+- **Isolation** — "tenant A's reads never observe tenant B's writes",
+  "no read returns data from a transaction that has not yet
+  committed"
+- **Ordering** — "consumers always see messages in the order the
+  producer sent them", "every reader sees a prefix of the global
+  log order"
+- **Membership** — "a node that fails its liveness probe is removed
+  from the cluster membership view within N seconds", "every joined
+  member appears in the membership table exactly once"
 
 If the project does NOT explicitly document a claim that appears
 in the code, write it as an *inferred* claim and mark it as such —

@@ -64,7 +64,7 @@ classify the bug into exactly one of:
 ### Recording the classification
 
 Each FAIL finding's report block carries a `Reduction classification:`
-field (one of SUT / harness / checker / env) immediately before the
+field (one of SUT / harness / checker / environment) immediately before the
 TaxDC `Classification:` field. The two are orthogonal — TaxDC says
 *what kind* of bug; reduction classification says *which component*
 holds the bug. Both are required.
