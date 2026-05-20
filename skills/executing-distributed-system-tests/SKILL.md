@@ -196,29 +196,62 @@ For each scenario:
    live, baseline metric captured, fault plane responsive.
 2. **Start workload** using the discovered driver.
 3. **Inject fault** per the plan schedule.
-4. **Capture evidence the fault landed** (counter, RPC timeout
-   pattern, log line). If you cannot prove it landed, the
-   scenario is INCONCLUSIVE, not PASS.
+4. **Capture evidence the fault landed.** The plan's §7.M
+   `Nemesis + landing evidence` field declares which observable
+   signal proves the fault landed (counter, RPC timeout pattern,
+   log marker, partition-status metric). Capture *that* signal,
+   not a generic one. If the signal is absent or ambiguous, the
+   scenario verdict is `INCONCLUSIVE-fault-not-proven` (see
+   `references/verdict-taxonomy.md`) — never PASS.
+
+   For non-serious scenarios that did not declare §7.M (no gated
+   claim category), capture a best-effort generic landing signal
+   from the appropriate row of `references/fault-injection-howto.md`.
 5. **Stop / quiesce** and collect.
 6. **Apply oracle** — read `references/oracle-patterns.md` for
    the right one if the plan didn't fully specify.
-7. **Record the verdict** with the actual oracle execution evidence,
-   not just the verdict.
+7. **Record the verdict** with the actual oracle execution evidence.
+   The verdict is one of the nine states defined in
+   `references/verdict-taxonomy.md`: PASS-smoke, PASS-hardening,
+   FAIL-reproducible, FAIL-nondeterministic, INCONCLUSIVE-env,
+   INCONCLUSIVE-oracle-too-weak, INCONCLUSIVE-fault-not-proven,
+   PARTIAL-surface, PARTIAL-model. Apply the decision tree in that
+   file to assign the verdict; do not free-form. Record the verdict
+   together with the oracle execution evidence (op count consumed,
+   anomalies found) and the §7.M nemesis landing signal — both are
+   required for any PASS-hardening claim.
 
 ### 5. On failure: capture before moving on
 
 Do not run the next scenario before recording:
 - Reproducer (apply `references/test-case-reduction.md`).
-- Classification (`references/finding-classification.md`).
+- **Reduction classification** (SUT / harness / checker /
+  environment, per the "Classify blame before filing" section of
+  `references/test-case-reduction.md`). Required before filing.
+  "Unknown — pending re-run on alternative harness/host" is
+  acceptable as an interim value; a wrong guess is not.
+- **TaxDC classification** (`references/finding-classification.md`,
+  bug type — orthogonal to the reduction classification above).
 - Evidence (log excerpts, op history files, metric snapshots).
 - Hypothesised root cause and owning subsystem.
 - Suggested next action.
 
-### 6. Apply green-but-broken checks
+### 6. Apply green-but-broken checks AND the weak-oracle audit
 
-Before declaring any scenario PASS, run the list in
-`references/green-but-broken-red-flags.md` and record the result
-of each check in the findings report.
+Before declaring any scenario PASS, run both checklists in
+`references/green-but-broken-red-flags.md`:
+
+1. The numbered "red-flag" checks (1–10) — guards against tests
+   that never ran.
+2. The "Weak oracles — do not trust these alone" section — guards
+   against tests that ran but whose oracle could not distinguish
+   PASS from FAIL.
+
+Record the result of each check in the findings report's
+green-but-broken section. A serious scenario (one with §7.M filled)
+cannot be marked `PASS-hardening` if any weak-oracle check is
+unchecked; downgrade to `PARTIAL-surface` or `PARTIAL-model` per
+`references/verdict-taxonomy.md`.
 
 ### 7. Write the findings report
 
@@ -315,6 +348,8 @@ would land in the SUT's repo if committed.
 - `references/finding-classification.md` — TaxDC-derived labels
 - `references/green-but-broken-red-flags.md` — non-optional
   pre-PASS checklist
+- `references/verdict-taxonomy.md` — the nine verdict states and the
+  decision tree for assigning one at run end
 
 ## Assets
 
