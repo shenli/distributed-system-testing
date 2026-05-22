@@ -221,6 +221,39 @@ For each scenario:
    anomalies found) and the §7.M nemesis landing signal — both are
    required for any PASS-hardening claim.
 
+**Per-arm execution for boundary and fairness scenarios.** When the
+plan's §7.M.S block declares scenario arms (e.g., `S5/api`,
+`S5/sdk`, `S5/export`, `S5/admin`):
+
+1. Run each arm as a separate scenario, in plan order. Log entries
+   are tagged with the arm id, not the parent scenario id.
+2. Apply the 9-state decision tree per arm — each arm earns its own
+   verdict independently. Arms that the session never reaches earn
+   `NOT-RUN` (the 10th state added by this iteration; see
+   `references/verdict-taxonomy.md`).
+3. After all arms are scored, compute the scenario-level aggregate
+   verdict via the downgrade rule: any `NOT-RUN` or `PARTIAL-*` arm
+   caps the scenario-level verdict at `PARTIAL-surface`, regardless
+   of which arms passed.
+4. Record both the per-arm verdicts and the aggregate in the
+   findings report's Scenario results table and Surface coverage
+   table.
+
+**Budget-tier verdict gating.** PASS-* verdicts require the run to
+have actually met the corresponding budget tier declared in the
+plan, not just produced a clean oracle output:
+
+- Run met only the smoke budget → at best `PASS-smoke`, never
+  `PASS-hardening`.
+- Run met the hardening budget → eligible for `PASS-hardening`.
+- Run met the release budget → eligible for the release-tier
+  verdict (currently expressed as `PASS-hardening` with a release
+  annotation; a future iteration may introduce a dedicated state).
+
+Record the budget tier actually met alongside the verdict in the
+session log so the findings report can confirm the verdict is
+defensible.
+
 ### 5. On failure: capture before moving on
 
 Do not run the next scenario before recording:
@@ -279,6 +312,18 @@ scenario table and split the finding accordingly.
 committed to specific claim→threat→scenario mappings and a
 confidence verdict. The report must include:
 
+- **Surface coverage** — for scenarios with §7.M.S arms in the plan,
+  list planned vs executed surfaces per arm with verdict and
+  downgrade reason. The aggregate row applies the downgrade rule:
+  any `NOT-RUN` or `PARTIAL-*` arm caps the scenario at
+  `PARTIAL-surface`. Render as "No boundary or fairness scenarios in
+  this plan" if §7.M.S was never declared.
+- **Release-budget disclosures** — lift every "Release budget: not
+  provided — <reason>. Revisit when: <…>." declaration from the plan
+  verbatim. Surfaces production-readiness gaps the run cannot close
+  on its own. Render as "All scenarios declared a concrete release
+  budget" if none of the plan's scenarios used the "not provided"
+  template.
 - **Adequacy assessment vs plan** — row per claim showing what
   the plan argued for vs what actually ran. INCONCLUSIVE scenarios
   shrink the adequacy of their claims; surface those gaps.
