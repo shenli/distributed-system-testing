@@ -47,8 +47,24 @@ The spine of the plan. List every guarantee the SUT promises its
 users — extracted from docs, API reference, code comments, error
 types, existing test names. Categorise (safety / liveness /
 durability / performance-SLO / operational / idempotency /
-isolation / ordering / membership). Mark inferred claims as
-`(inferred)`.
+isolation / ordering / membership /
+boundary / fairness). Mark inferred claims as `(inferred)`.
+
+The two newest categories disambiguate two distinct concepts:
+
+- `isolation` means consistency-isolation anomalies (G2-item,
+  serializability, Elle-detectable read/write anomalies). Tested
+  with checkers from `oracle-patterns.md` §1 and §3.
+- `boundary` means access-boundary semantics: tenant isolation,
+  authz, namespace, routing, multi-protocol access, compatibility
+  across API surfaces. Subsumes tenancy / authz / namespace /
+  routing — they do not appear as separate categories. Tested per
+  the surface-decomposition discipline (§7.M.S; see
+  `references/boundary-and-isolation-testing.md`).
+
+`fairness` covers per-group performance and noisy-neighbor
+isolation. Group can be tenant, shard, queue, partition, region,
+priority class, user, table, or workload class.
 
 | ID | Claim | Category | Source | Inferred? |
 |---|---|---|---|---|
@@ -327,6 +343,18 @@ is supporting evidence; this is the verdict.
 cannot happen." Absolute negatives are stronger than any finite test
 suite can support. Conservative phrasing keeps the confidence
 statement defensible.
+
+**Surface-coverage disclosure rule.** If any boundary-style claim
+(category `boundary` or `fairness`) has scenario arms in its
+§7.M.S block that are expected to be `NOT-RUN` or `PARTIAL-surface`
+in the executed plan, the §7d statement MUST explicitly name those
+untested surfaces. Silent omission of an untested surface is the
+specific failure mode this rule prevents — a reader of the §7d
+statement should never come away believing a boundary claim was
+fully exercised when in fact only one or two of its surfaces were.
+"We tested the API arm; the export and admin arms are out of
+scope this round because the harnesses for those surfaces are not
+yet built" is the expected shape.
 
 ## 8. What this plan does NOT cover
 
