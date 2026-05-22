@@ -18,9 +18,15 @@ in-process test plus an external workload, for example), give each
 its own row with `S1 Driver A` / `S1 Driver B` IDs so verdicts and
 evidence do not get conflated.
 
+For boundary-style scenarios with §7.M.S arms, each arm gets its own
+row using an `S<n>/arm` ID (e.g., `S5/api`, `S5/admin`). The
+scenario's aggregate row uses the parent ID (e.g., `S5`) and follows
+the downgrade rule: any `NOT-RUN` or `PARTIAL-*` arm caps the
+aggregate verdict at `PARTIAL-surface`.
+
 | ID | Scenario | [Verdict][vt] | Oracle | Oracle execution evidence | Nemesis landing evidence | Artifact link |
 |---|---|---|---|---|---|---|
-| S1 | {{name}} | PASS-hardening / PASS-smoke / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model | {{property checked}} | {{e.g. "assertion fired 1000/1000", "Elle processed 4217 ops 0 anomalies"}} | {{e.g. "iptables counter 0→14,712 over the injection window; SUT raft log shows leader-lost", or "n/a — no fault (PASS-smoke)"}} | {{link to session log entry + artifacts}} |
+| S1 | {{name}} | PASS-hardening / PASS-smoke / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model / NOT-RUN | {{property checked}} | {{e.g. "assertion fired 1000/1000", "Elle processed 4217 ops 0 anomalies"}} | {{e.g. "iptables counter 0→14,712 over the injection window; SUT raft log shows leader-lost", or "n/a — no fault (PASS-smoke)"}} | {{link to session log entry + artifacts}} |
 
 [vt]: ../references/verdict-taxonomy.md
 
@@ -52,6 +58,44 @@ evidence do not get conflated.
 For each hypothesis in the plan, state which scenarios exercised it
 and the result. Hypotheses that were not exercised must be listed
 with the reason (out of scope, blocked by missing tooling, deferred).
+
+## Surface coverage (boundary and fairness scenarios)
+
+For scenarios with a §7.M.S block declared in the plan, list the
+per-arm execution and verdict here. Aggregate rows are derived from
+the per-arm verdicts via the downgrade rule.
+
+| Scenario / arm | Surface         | Planned | Executed | Verdict           | Downgrade reason                       |
+|---|---|---|---|---|---|
+| S5/api    | API                 | yes     | yes      | PASS-hardening    | —                                      |
+| S5/sdk    | SDK                 | yes     | yes      | PASS-smoke        | —                                      |
+| S5/export | export pipeline     | yes     | no       | NOT-RUN           | export harness not yet built           |
+| S5/admin  | admin API           | yes     | yes      | PARTIAL-surface   | no negative controls captured this run |
+| S5        | (aggregate)         |         |          | PARTIAL-surface   | 1 NOT-RUN arm + 1 PARTIAL arm          |
+
+**Missing surfaces this run did not cover:** name each one, with
+the reason it was not covered. If every planned surface was
+covered, render this line as "All planned surfaces were executed."
+
+If the plan has no §7.M.S scenarios, render this section as a
+single line: "No boundary or fairness scenarios in this plan."
+Explicit-empty is the signal.
+
+## Release-budget disclosures
+
+Lift every scenario whose `Release budget` field in the plan was
+filled with `not provided — <reason>. Revisit when: <…>.` into the
+table below, carrying the reason and revisit-condition verbatim from
+the plan.
+
+| Scenario | Reason release budget was not provided | Revisit when                                           |
+|---|---|---|
+| S5      | SUT has no statistical-gate harness yet | the perf-bench rig in tools/agentdb-bench supports multi-day soak runs |
+| S9/sdk  | release tier is the SDK team's plan      | their plan covers this claim                          |
+
+If every scenario declared a concrete release budget, render this
+section as a single line: "All scenarios declared a concrete release
+budget." Explicit-empty is the signal.
 
 ## Adequacy assessment vs the plan's coverage argument
 
