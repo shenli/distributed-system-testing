@@ -1,6 +1,6 @@
 ---
 name: executing-distributed-system-tests
-description: Use when running a previously designed distributed-systems test plan against a real or simulated cluster — driving fault injection, workload, chaos scenarios, linearizability / consistency runs, durability tests, partition tests, crash-recovery tests, upgrade tests, performance/SLO runs, or release validation. Also use when asked to "execute the plan", "reproduce a distributed bug", "run stability tests", "drive chaos", "validate a release end-to-end", or when a plan file exists at docs/testing-plans/ or any caller-specified location and needs to be run. Discovers the SUT's existing test toolbox (tools/, scripts/, runbooks) and uses it rather than reinventing, captures nemesis landing evidence per scenario, runs the green-but-broken and weak-oracle audits before any PASS, and produces a session directory of raw artifacts plus a structured findings report carrying a 9-state verdict (PASS-smoke / PASS-hardening / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model), a SUT / harness / checker / environment blame classification per finding, and a TaxDC bug-type tag.
+description: Use when running a previously designed distributed-systems test plan against a real or simulated cluster — driving fault injection, workload, chaos scenarios, linearizability / consistency runs, durability tests, partition tests, crash-recovery tests, upgrade tests, performance/SLO runs, or release validation. Also use when asked to "execute the plan", "reproduce a distributed bug", "run stability tests", "drive chaos", "validate a release end-to-end", or when a plan file exists at docs/testing-plans/ or any caller-specified location and needs to be run. Discovers the SUT's existing test toolbox (tools/, scripts/, runbooks) and uses it rather than reinventing, captures nemesis landing evidence per scenario, runs the green-but-broken and weak-oracle audits before any PASS, and produces a session directory of raw artifacts plus a structured findings report carrying a 10-state verdict (PASS-smoke / PASS-hardening / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model / NOT-RUN), a SUT / harness / checker / environment blame classification per finding, and a TaxDC bug-type tag.
 ---
 
 # Executing Distributed-System Tests
@@ -211,7 +211,7 @@ For each scenario:
 6. **Apply oracle** — read `references/oracle-patterns.md` for
    the right one if the plan didn't fully specify.
 7. **Record the verdict** with the actual oracle execution evidence.
-   The verdict is one of the nine states defined in
+   The verdict is one of the ten states defined in
    `references/verdict-taxonomy.md`: PASS-smoke, PASS-hardening,
    FAIL-reproducible, FAIL-nondeterministic, INCONCLUSIVE-env,
    INCONCLUSIVE-oracle-too-weak, INCONCLUSIVE-fault-not-proven,
@@ -227,7 +227,7 @@ plan's §7.M.S block declares scenario arms (e.g., `S5/api`,
 
 1. Run each arm as a separate scenario, in plan order. Log entries
    are tagged with the arm id, not the parent scenario id.
-2. Apply the 9-state decision tree per arm — each arm earns its own
+2. Apply the 10-state decision tree per arm — each arm earns its own
    verdict independently. Arms that the session never reaches earn
    `NOT-RUN` (the 10th state added by this iteration; see
    `references/verdict-taxonomy.md`).
@@ -393,8 +393,12 @@ would land in the SUT's repo if committed.
 - `references/finding-classification.md` — TaxDC-derived labels
 - `references/green-but-broken-red-flags.md` — non-optional
   pre-PASS checklist
-- `references/verdict-taxonomy.md` — the nine verdict states and the
+- `references/verdict-taxonomy.md` — the ten verdict states and the
   decision tree for assigning one at run end
+- `references/boundary-and-isolation-testing.md` (lives in the
+  design skill; named here for cross-reference) — surface catalogs
+  and the downgrade rule the execute skill applies to per-arm
+  verdicts for `{boundary, fairness}` scenarios
 
 ## Assets
 

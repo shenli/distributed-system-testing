@@ -190,7 +190,17 @@ ceremonial scenarios that say nothing extra.
 
 ## In the plan
 
-The plan template's §7.M.S block has named fields that map 1:1 onto
-the matrix above. The plan author fills the matrix here, then lifts
-the rows into the template fields. The findings report's Surface
-coverage table mirrors the matrix per arm.
+The plan template's §7.M.S block has eight named fields drawn from
+this matrix (Surfaces, Operations, Adversarial inputs, Positive
+controls, Negative controls, Delayed / async paths, Observability
+paths, Scenario arms). The matrix's `Confusable identifiers` row
+maps to the template's `Adversarial inputs` field — the names
+differ but the content is the same. The matrix's `Background paths`
+row folds into the template's `Delayed / async paths` field — list
+background-job paths there explicitly. The matrix's `Boundary
+claim`, `Boundary keys`, `Oracle`, and budget rows live as
+scenario-level fields elsewhere in the plan template (Falsifies
+row, §7 Oracle field, §7 budget tiers). The plan author fills the
+matrix here, then lifts the rows into the corresponding template
+fields. The findings report's Surface coverage table mirrors the
+matrix per arm.

@@ -288,13 +288,14 @@ checklist. The catalog index pairs symptoms to references.
 │   │   ├── assets/plan-template.md             ← §0–§9 incl. gated §7.M
 │   │   └── references/                         ← 8-file technique catalog + index,
 │   │                                             common-distributed-systems-pitfalls,
-│   │                                             history-discipline
+│   │                                             history-discipline,
+│   │                                             boundary-and-isolation-testing
 │   └── executing-distributed-system-tests/
 │       ├── SKILL.md                            ← the execute workflow
 │       ├── assets/
 │       │   ├── session-log-template.md
 │       │   └── findings-report-template.md     ← 10-state verdicts + landing evidence
-│       └── references/                         ← oracle-patterns (checker picker + 13
+│       └── references/                         ← oracle-patterns (checker picker + 14
 │                                                 patterns), fault-injection-howto
 │                                                 (22-row nemesis taxonomy),
 │                                                 test-case-reduction (with blame

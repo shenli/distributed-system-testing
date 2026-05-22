@@ -4,7 +4,7 @@ A test outcome is not three-valued (PASS / FAIL / INCONCLUSIVE) in a
 distributed system. Three values collapse distinctions that matter:
 "the chaos script ran cleanly and nothing crashed" is not the same as
 "the linearizability checker consumed the full history under the
-proven fault and saw no anomaly." This file defines the nine
+proven fault and saw no anomaly." This file defines the ten
 verdict states the execute skill assigns at run end.
 
 **Distinct from `finding-classification.md`.** That file classifies
@@ -136,8 +136,8 @@ Common causes: time-bounded session ran out before reaching this
 arm; the arm is gated behind a future release-tier budget; the
 harness for this surface is not yet built.
 
-The aggregation rule: any `NOT-RUN` arm caps the scenario-level
-verdict at `PARTIAL-surface`. The findings report names the
+The aggregation rule: any `NOT-RUN` or `PARTIAL-*` arm caps the
+scenario-level verdict at `PARTIAL-surface`. The findings report names the
 deferred arm explicitly in the Surface coverage table; it does not
 silently fold into the aggregate.
 
@@ -185,8 +185,8 @@ active + Oracle passed → `PASS-hardening`.
 The pre-execution branches at the top of the tree (NOT-RUN and
 INCONCLUSIVE-env) are mutually exclusive. NOT-RUN means the arm or
 scenario was declared in the plan but the session did not attempt
-it. INCONCLUSIVE-env means the attempt started but a required
-capability was missing.
+it. INCONCLUSIVE-env means the attempt was made but a required
+capability was missing before the scenario could proceed.
 
 ## Findings-report column
 
