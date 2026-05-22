@@ -209,8 +209,25 @@ and runs.
 - **Faults:** {{schedule — what is injected, when, for how long}}
 - **Oracle:** {{the property checked and how}}
 - **Observability required:** {{logs, metrics, traces, dumps}}
-- **Exit criteria:** {{pass / fail / inconclusive conditions, run duration,
-  statistical confidence if applicable}}
+- **Smoke budget:** {{minimum config size, run duration, fault count,
+  and seed count required to produce `PASS-smoke`. Example: 2 tenants
+  × 60s × 1 fault × 1 seed.}}
+- **Hardening budget:** {{strictly stronger than smoke on every
+  dimension; required to produce `PASS-hardening`. Example: 8 tenants
+  × 30min × 5 nemesis windows × 3 seeds.}}
+- **Release budget:** {{long / repeated / statistical gate; required
+  to mark the claim as ready to ship to production. OR an explicit
+  `not provided — <reason>. Revisit when: <condition>.` declaration.
+  Empty, "TBD", and "see §6b" alone are explicitly disallowed.
+  Examples:
+  - 24h soak × 30 seeds × 5 nemesis variants × statistical-gate via
+    bootstrap CI on p99.
+  - not provided — SUT has no statistical-gate harness yet. Revisit
+    when the perf-bench rig in tools/agentdb-bench supports multi-day
+    soak runs.
+  - not provided — release tier is the responsibility of the
+    integration-test team, not this plan. Revisit when their plan
+    covers this claim.}}
 - **Target test file:** {{relative SUT path, e.g. `crates/agentdb-core/tests/auto/S1_linearizable_append_under_partition.rs`}}
 - **Skeleton language:** {{rust | go | python | typescript | shell}}
 - **Skeleton:**
@@ -283,6 +300,40 @@ gated claim category falsified)` and skip the fields below.
   mix + deterministic seed that still reproduces. After reduction,
   classify into one of SUT / harness / checker / environment per the
   executing skill's `references/test-case-reduction.md`.
+
+#### §7.M.S — Surface decomposition
+
+Mandatory if any claim referenced in this scenario's `Falsifies if it
+FAILs` row is in `{boundary, fairness}`. Otherwise: write
+`§7.M.S: not applicable (no boundary or fairness claim falsified)`
+and skip the fields below.
+
+- **Surfaces:** list, drawn from the system's surface catalog in
+  `references/boundary-and-isolation-testing.md` (or SUT-specific
+  surfaces the catalog does not cover). Minimum three surfaces named
+  per boundary claim, or a written justification for fewer.
+- **Operations:** per surface, which operations the scenario
+  exercises (read, write, delete, list, admin-action, export, replay).
+- **Adversarial inputs:** confusable identifiers from the catalog in
+  `references/boundary-and-isolation-testing.md` (identical names
+  under different scopes, prefix collisions, case-folding ambiguities,
+  embedded separators, recycled IDs, near-quorum ranges,
+  integer-overflow boundary keys, Unicode normalisation collisions).
+- **Positive controls:** what legitimate access must still succeed.
+- **Negative controls:** what illegitimate access must be denied
+  AND not observable in metrics, logs, or side channels.
+- **Delayed / async paths:** background jobs, retries, GC,
+  compaction, CDC streams, export pipelines that could leak across
+  the boundary out-of-band.
+- **Observability paths:** metrics, traces, audit logs that could
+  themselves leak across the boundary.
+- **Scenario arms:** per-arm IDs (e.g., `S5/api`, `S5/sdk`,
+  `S5/export`, `S5/admin`). One arm per surface unless arms are
+  collapsed with written justification. Each arm carries its own
+  §7.M block, its own oracle, and its own verdict at run end. Apply
+  the split-into-arms rule: if the scenario spans more than 3
+  surfaces, more than 3 claim categories, or requires more than 1
+  independent oracle, splitting is mandatory.
 
 ### Scenario S2: ...
 
