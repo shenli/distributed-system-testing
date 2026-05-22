@@ -407,6 +407,38 @@ fully exercised when in fact only one or two of its surfaces were.
 scope this round because the harnesses for those surfaces are not
 yet built" is the expected shape.
 
+**Per-aspect confidence (required for boundary / fairness claims;
+optional for others).** Lead with the conservative paragraph above.
+Then, for any claim whose §7.M.S decomposes into multiple arms
+(boundary claims) or whose oracle covers multiple groups (fairness
+claims), list per-aspect confidence in a small table.
+
+| Claim | Aspect | Confidence | Reason |
+|---|---|---|---|
+| C16 | single-node failover inside one cell      | moderate | S_cell_node_fail ran clean against 3-node cell |
+| C16 | whole-cell outage containment             | low      | no scenario killed or partitioned a whole cell |
+| C16 | cell fairness under noisy neighbour       | low      | no per-cell noisy-neighbour test ran            |
+| C16 | routing rejects stale cell hint           | high     | S_routing_rejects_wrong_cell PASS-hardening    |
+| C20 | API surface (tenant isolation)            | high     | S_api_tenant_isolation PASS-hardening           |
+| C20 | export pipeline (tenant isolation)        | low      | no export-path arm ran                          |
+| C28 | shard rebalance during sustained writes   | moderate | S_shard_rebalance_writes ran clean at 4 shards; not exercised at scale |
+| C33 | cross-region replication lag SLO          | low      | no scenario forced a region into recovery      |
+
+Confidence levels are `high` / `moderate` / `low`. Reasons are one
+line each, citing the specific scenario or gap that drove the
+rating. Aspects come directly from §7.M.S Scenario arms when
+present, or from the claim's surface set otherwise.
+
+If every aspect is `high`, render the table as the single line "All
+aspects rated `high`." Explicit-empty is the signal — same pattern
+as §1c missing claims, §7c residual uncertainty, and the Release-
+budget disclosures section in the findings template.
+
+The single paragraph above still leads §7d and remains the headline
+verdict. A reader who only reads the paragraph gets the overall
+read; a reader who reads the table gets the breakdown that makes
+the rating defensible.
+
 ## 8. What this plan does NOT cover
 
 Bullet list of explicit non-goals so reviewers know where the holes
