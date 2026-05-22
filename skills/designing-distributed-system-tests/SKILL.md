@@ -408,7 +408,8 @@ needs. Without them, the plan answers "what would we test" but
 not "is testing this enough to ship."
 
 For boundary or fairness claims (any claim whose §7.M.S decomposes
-into multiple arms), the §7d statement must include a per-aspect
+into multiple arms, or whose oracle covers multiple groups), the
+§7d statement must include a per-aspect
 confidence table after the leading paragraph. The paragraph alone
 hides which arms are well-tested vs. which are deferred; the table
 makes it visible. A single conservative paragraph that says
@@ -476,11 +477,11 @@ not a confidence argument.
    `not provided — <reason>. Revisit when: <condition>.` template
    — absence must be an explicit disclosure, not a silent gap.
 7. **Scenario name promises decomposition that §7.M.S does not
-   deliver.** If a scenario name contains "routing", "isolation",
+   deliver.** If a scenario name contains "routing", "tenant isolation",
    "blast radius", "multi-tenant", "cell", "region", "shard",
    "namespace", "availability zone", "replica set", "placement
    pool", "failure domain", or similar architectural-boundary
-   keyword, AND the scenario's §7.M.S Surfaces field is empty or
+   keyword, AND the scenario's §7.M.S `Surfaces` field is empty or
    names only one surface — the plan is incomplete. Either fill
    §7.M.S with the surface decomposition the boundary keyword
    implies, or rename the scenario so its name does not promise a
