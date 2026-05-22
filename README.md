@@ -2,7 +2,7 @@
 
 **Two skills for AI coding agents that design and run claim-driven
 tests for distributed and stateful systems.** Together they produce a
-structured Markdown test plan and a findings report with 9-state
+structured Markdown test plan and a findings report with 10-state
 verdicts and an explicit SUT / harness / checker / environment blame
 classification. A reviewer reads the two artifacts and decides
 whether to ship; nothing else has to be re-run.
@@ -52,7 +52,7 @@ field's hard-won knowledge:
   alone.
 - **No silent passes.** Every PASS cites oracle execution evidence
   *and* the signal proving the fault actually fired. Verdicts come
-  from a 9-state set, so "the chaos script ran cleanly" can't be
+  from a 10-state set, so "the chaos script ran cleanly" can't be
   read as "the claim survived the fault." Every FAIL carries a
   SUT / harness / checker / environment blame tag so reproducers
   reach the right queue.
@@ -243,7 +243,7 @@ gap analysis).
 Reads the plan, discovers the SUT's toolbox, probes the environment,
 and runs scenarios with checkpoint discipline. Per scenario: captures
 landing evidence for the fault, runs the green-but-broken and
-weak-oracle audits, assigns a verdict from the 9-state taxonomy in
+weak-oracle audits, assigns a verdict from the 10-state taxonomy in
 [`verdict-taxonomy.md`](skills/executing-distributed-system-tests/references/verdict-taxonomy.md),
 and classifies every FAIL into SUT / harness / checker / environment
 before filing. Produces a findings report with adequacy-vs-plan
@@ -288,20 +288,21 @@ checklist. The catalog index pairs symptoms to references.
 │   │   ├── assets/plan-template.md             ← §0–§9 incl. gated §7.M
 │   │   └── references/                         ← 8-file technique catalog + index,
 │   │                                             common-distributed-systems-pitfalls,
-│   │                                             history-discipline
+│   │                                             history-discipline,
+│   │                                             boundary-and-isolation-testing
 │   └── executing-distributed-system-tests/
 │       ├── SKILL.md                            ← the execute workflow
 │       ├── assets/
 │       │   ├── session-log-template.md
-│       │   └── findings-report-template.md     ← 9-state verdicts + landing evidence
-│       └── references/                         ← oracle-patterns (checker picker + 13
+│       │   └── findings-report-template.md     ← 10-state verdicts + landing evidence
+│       └── references/                         ← oracle-patterns (checker picker + 14
 │                                                 patterns), fault-injection-howto
 │                                                 (22-row nemesis taxonomy),
 │                                                 test-case-reduction (with blame
 │                                                 classification), green-but-broken-
 │                                                 red-flags (incl. weak-oracle audit),
 │                                                 finding-classification (TaxDC),
-│                                                 verdict-taxonomy (9-state)
+│                                                 verdict-taxonomy (10-state)
 ├── evals/                                      ← eval suites for both skills
 ├── verification/                               ← real runs against AgentDB (concrete output)
 └── specs/                                      ← original design spec

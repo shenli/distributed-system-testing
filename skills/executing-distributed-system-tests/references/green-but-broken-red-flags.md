@@ -80,3 +80,13 @@ mechanisms section).
 - **One seed.** A single PRNG seed is one interleaving. Treat any
   PASS-hardening claim built on a single seed as `PARTIAL-model`
   until you have at least three seeds with the same verdict.
+- **Single surface only.** Boundary-style claims tested only on the
+  API surface miss admin, export, SDK, background-job, and
+  observability paths. Pair with: surface decomposition per
+  the design skill's `references/boundary-and-isolation-testing.md`.
+- **Positive control only.** "The legitimate user could read" does
+  not prove "the illegitimate user could not." Pair with: explicit
+  negative controls in §7.M.S.
+- **Latency-margin without per-group breakdown.** Aggregate p99
+  meeting an SLO does not prove fairness. Pair with: per-group
+  metrics via the fairness checker (`oracle-patterns.md` §14).

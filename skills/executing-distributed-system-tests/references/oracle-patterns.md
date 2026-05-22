@@ -23,6 +23,7 @@ sections below for how to actually run the chosen checker.
 | queue            | ordering             | prefix / order checker                                    |
 | counter          | safety               | linearizability OR invariant-over-final-state per key     |
 | lock / lease     | safety               | exclusion property + invariant-over-final-state           |
+| any group (tenant/shard/queue/…) | fairness | formula-based per-group fairness checker (§14) |
 
 If the scenario's model is not in this table, pick the closest row
 and write down in §7.M why the checker still applies (or pick "no
@@ -120,6 +121,31 @@ checker" and justify per the §7.M block in the designing skill's
 - **How:** after the workload + faults complete, force quiescence (drain in-flight, stop new ops, wait the SUT's convergence window). Dump each replica's full state. Diff pairwise.
 - **Inputs:** per-replica final-state dumps; replica identity from `node_seen`.
 - **Failure mode:** comparing replicas before convergence has actually completed. Some SUTs have eventual-consistency windows of minutes; convergence is a function of the SUT, not the test.
+
+### 14. Fairness checker (formula-based, per-group)
+
+- **When:** the claim is "no group is unfairly starved, throttled,
+  or prioritised" — applies to tenants, shards, queues, partitions,
+  regions, priority classes, users, tables, or workload classes.
+- **How:** record per-group metrics (latency percentiles, throughput,
+  error rate) over a measurement window. Evaluate a formula on the
+  collected metrics. Required formulas to declare in the plan:
+    - `worst_group_p99 / aggregate_p99 <= threshold`   — no group
+      experiences materially worse tail latency.
+    - `min_group_throughput >= threshold`              — no group
+      is starved on throughput.
+    - `error_rate_by_group == 0`                       — no group
+      sees elevated error rates.
+    - `repeat_spread <= threshold`                     — variance
+      between runs of the same group is bounded.
+- **Inputs:** per-group metric series, the threshold values
+  declared in the plan, and the group dimension (tenant / shard /
+  queue / partition / region / priority / user / table /
+  workload-class).
+- **Failure mode:** picking a "group" too coarse to surface the
+  unfairness — e.g., aggregating across regions hides per-region
+  starvation. The group dimension must match the boundary the
+  fairness claim is about.
 
 ## Required for every oracle
 

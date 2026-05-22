@@ -1,6 +1,6 @@
 ---
 name: executing-distributed-system-tests
-description: Use when running a previously designed distributed-systems test plan against a real or simulated cluster — driving fault injection, workload, chaos scenarios, linearizability / consistency runs, durability tests, partition tests, crash-recovery tests, upgrade tests, performance/SLO runs, or release validation. Also use when asked to "execute the plan", "reproduce a distributed bug", "run stability tests", "drive chaos", "validate a release end-to-end", or when a plan file exists at docs/testing-plans/ or any caller-specified location and needs to be run. Discovers the SUT's existing test toolbox (tools/, scripts/, runbooks) and uses it rather than reinventing, captures nemesis landing evidence per scenario, runs the green-but-broken and weak-oracle audits before any PASS, and produces a session directory of raw artifacts plus a structured findings report carrying a 9-state verdict (PASS-smoke / PASS-hardening / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model), a SUT / harness / checker / environment blame classification per finding, and a TaxDC bug-type tag.
+description: Use when running a previously designed distributed-systems test plan against a real or simulated cluster — driving fault injection, workload, chaos scenarios, linearizability / consistency runs, durability tests, partition tests, crash-recovery tests, upgrade tests, performance/SLO runs, tenant isolation runs, boundary or authz runs, fairness / noisy-neighbor runs, or release validation. Also use when asked to "execute the plan", "reproduce a distributed bug", "run stability tests", "drive chaos", "validate a release end-to-end", "run the tenant isolation tests", "check fairness across tenants", or when a plan file exists at docs/testing-plans/ or any caller-specified location and needs to be run. Discovers the SUT's existing test toolbox (tools/, scripts/, runbooks) and uses it rather than reinventing, captures nemesis landing evidence per scenario, runs the green-but-broken and weak-oracle audits before any PASS, and (for boundary or fairness scenarios with §7.M.S arms in the plan) runs each surface arm separately with its own verdict and applies a downgrade rule so the aggregate verdict cannot silently fold an untested surface into a passing scenario. Produces a session directory of raw artifacts plus a structured findings report carrying a 10-state verdict (PASS-smoke / PASS-hardening / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model / NOT-RUN), a SUT / harness / checker / environment blame classification per finding, a TaxDC bug-type tag, per-arm Surface coverage table, and Release-budget disclosures.
 ---
 
 # Executing Distributed-System Tests
@@ -211,7 +211,7 @@ For each scenario:
 6. **Apply oracle** — read `references/oracle-patterns.md` for
    the right one if the plan didn't fully specify.
 7. **Record the verdict** with the actual oracle execution evidence.
-   The verdict is one of the nine states defined in
+   The verdict is one of the ten states defined in
    `references/verdict-taxonomy.md`: PASS-smoke, PASS-hardening,
    FAIL-reproducible, FAIL-nondeterministic, INCONCLUSIVE-env,
    INCONCLUSIVE-oracle-too-weak, INCONCLUSIVE-fault-not-proven,
@@ -220,6 +220,39 @@ For each scenario:
    together with the oracle execution evidence (op count consumed,
    anomalies found) and the §7.M nemesis landing signal — both are
    required for any PASS-hardening claim.
+
+**Per-arm execution for boundary and fairness scenarios.** When the
+plan's §7.M.S block declares scenario arms (e.g., `S5/api`,
+`S5/sdk`, `S5/export`, `S5/admin`):
+
+1. Run each arm as a separate scenario, in plan order. Log entries
+   are tagged with the arm id, not the parent scenario id.
+2. Apply the 10-state decision tree per arm — each arm earns its own
+   verdict independently. Arms that the session never reaches earn
+   `NOT-RUN` (the 10th state added by this iteration; see
+   `references/verdict-taxonomy.md`).
+3. After all arms are scored, compute the scenario-level aggregate
+   verdict via the downgrade rule: any `NOT-RUN` or `PARTIAL-*` arm
+   caps the scenario-level verdict at `PARTIAL-surface`, regardless
+   of which arms passed.
+4. Record both the per-arm verdicts and the aggregate in the
+   findings report's Scenario results table and Surface coverage
+   table.
+
+**Budget-tier verdict gating.** PASS-* verdicts require the run to
+have actually met the corresponding budget tier declared in the
+plan, not just produced a clean oracle output:
+
+- Run met only the smoke budget → at best `PASS-smoke`, never
+  `PASS-hardening`.
+- Run met the hardening budget → eligible for `PASS-hardening`.
+- Run met the release budget → eligible for the release-tier
+  verdict (currently expressed as `PASS-hardening` with a release
+  annotation; a future iteration may introduce a dedicated state).
+
+Record the budget tier actually met alongside the verdict in the
+session log so the findings report can confirm the verdict is
+defensible.
 
 ### 5. On failure: capture before moving on
 
@@ -279,6 +312,18 @@ scenario table and split the finding accordingly.
 committed to specific claim→threat→scenario mappings and a
 confidence verdict. The report must include:
 
+- **Surface coverage** — for scenarios with §7.M.S arms in the plan,
+  list planned vs executed surfaces per arm with verdict and
+  downgrade reason. The aggregate row applies the downgrade rule:
+  any `NOT-RUN` or `PARTIAL-*` arm caps the scenario at
+  `PARTIAL-surface`. Render as "No boundary or fairness scenarios in
+  this plan" if §7.M.S was never declared.
+- **Release-budget disclosures** — lift every "Release budget: not
+  provided — <reason>. Revisit when: <…>." declaration from the plan
+  verbatim. Surfaces production-readiness gaps the run cannot close
+  on its own. Render as "All scenarios declared a concrete release
+  budget" if none of the plan's scenarios used the "not provided"
+  template.
 - **Adequacy assessment vs plan** — row per claim showing what
   the plan argued for vs what actually ran. INCONCLUSIVE scenarios
   shrink the adequacy of their claims; surface those gaps.
@@ -348,8 +393,12 @@ would land in the SUT's repo if committed.
 - `references/finding-classification.md` — TaxDC-derived labels
 - `references/green-but-broken-red-flags.md` — non-optional
   pre-PASS checklist
-- `references/verdict-taxonomy.md` — the nine verdict states and the
+- `references/verdict-taxonomy.md` — the ten verdict states and the
   decision tree for assigning one at run end
+- `references/boundary-and-isolation-testing.md` (lives in the
+  design skill; named here for cross-reference) — surface catalogs
+  and the downgrade rule the execute skill applies to per-arm
+  verdicts for `{boundary, fairness}` scenarios
 
 ## Assets
 

@@ -1,6 +1,6 @@
 ---
 name: designing-distributed-system-tests
-description: Use when designing a test plan for a distributed or stateful system — anything with persistence, replication, consensus, retries, idempotency, async messaging, multi-tenancy, or partial failure. Plans are claim-driven; investigate the product's claimed guarantees first, then design hypotheses and scenarios that try to falsify those claims under fault. Handles both change-scoped plans (a specific commit / PR / feature) and project-wide plans (a holistic plan for the whole system with existing-test inventory and gap analysis). Also use when asked to write a stability plan, fault matrix, release-validation plan, durability test plan, partition test plan, upgrade test plan, crash-recovery test plan, linearizability test plan, deterministic-simulation plan, "test plan to enough coverage", "what should we be testing", or "make a holistic test plan". Trigger even if the user just says "what should we test for this change" or "design the test plan for this project". Produces a structured Markdown plan file with hypothesis-driven scenarios drawn from a curated technique catalog (Jepsen+Elle, deterministic simulation, chaos/fault injection, fuzzing, formal methods, property+metamorphic, performance, crash-recovery+upgrade).
+description: Use when designing a test plan for a distributed or stateful system — anything with persistence, replication, consensus, retries, idempotency, async messaging, multi-tenancy, or partial failure. Plans are claim-driven; investigate the product's claimed guarantees first, then design hypotheses and scenarios that try to falsify those claims under fault. Handles both change-scoped plans (a specific commit / PR / feature) and project-wide plans (a holistic plan for the whole system with existing-test inventory and gap analysis). Also use when asked to write a stability plan, fault matrix, release-validation plan, durability test plan, partition test plan, upgrade test plan, crash-recovery test plan, linearizability test plan, deterministic-simulation plan, tenant isolation test plan, authz / boundary test plan, namespace isolation plan, multi-protocol access plan, fairness test plan, noisy-neighbor test plan, "test plan to enough coverage", "what should we be testing", or "make a holistic test plan". Trigger even if the user just says "what should we test for this change", "design the test plan for this project", "are my tenants actually isolated", or "how do I test fairness across tenants / shards / queues". Produces a structured Markdown plan file with hypothesis-driven scenarios drawn from a curated technique catalog (Jepsen+Elle, deterministic simulation, chaos/fault injection, fuzzing, formal methods, property+metamorphic, performance, crash-recovery+upgrade) and, for claims involving consistency / durability / idempotency / isolation / ordering / membership, a model+history+checker discipline (§7.M); for claims involving boundary semantics (tenant isolation, authz, namespace, routing, multi-protocol) or fairness, a surface-decomposition discipline (§7.M.S) that splits the scenario into per-surface arms with independent verdicts.
 ---
 
 # Designing Distributed-System Tests
@@ -171,6 +171,16 @@ If a category is genuinely not applicable, say so explicitly. The act
 of writing "N/A because…" surfaces wrong assumptions more often than
 it sounds like it would.
 
+**Boundary and fairness claims trigger §7.M.S.** When you encounter a
+claim about tenant isolation, authz, namespace, routing,
+multi-protocol access, compatibility across API surfaces, or
+per-group fairness (noisy-neighbor, queue-group, per-region), tag it
+with the `boundary` or `fairness` category in §1b. Both categories
+trigger the surface-decomposition discipline in §7.M.S of every
+scenario that falsifies them — see
+`references/boundary-and-isolation-testing.md` for the boundary
+claim matrix template and surface catalogs.
+
 In project-wide mode the list is typically larger (the system has
 more surfaces than any single change). Group hypotheses by subsystem
 so the gap-analysis table stays readable.
@@ -312,6 +322,55 @@ consumed history Y under nemesis Z with landing evidence E") for
 every serious scenario. A serious scenario whose §7.M is partially
 filled cannot contribute to a hardening claim.
 
+**Fill §7.M.S for boundary and fairness scenarios.** If any claim in
+this scenario's `Falsifies if it FAILs` row belongs to
+`{boundary, fairness}`, the scenario is *surface-decomposition
+mandatory* and must fill the §7.M.S sub-block in the plan template:
+
+- **Surfaces** — drawn from the catalog in
+  `references/boundary-and-isolation-testing.md`, or SUT-specific
+  surfaces the catalog does not cover. Minimum three per boundary
+  claim or written justification for fewer.
+- **Operations** — per surface, which operations the scenario
+  exercises.
+- **Adversarial inputs** — confusable identifiers from the catalog
+  in `boundary-and-isolation-testing.md`.
+- **Positive controls** — what legitimate access must still succeed.
+- **Negative controls** — what illegitimate access must be denied
+  AND not observable in metrics / logs / side channels.
+- **Delayed / async paths** — background jobs, retries, GC,
+  compaction, CDC, exports.
+- **Observability paths** — metrics, traces, audit logs that could
+  themselves leak across the boundary.
+- **Scenario arms** — per-arm IDs (`S<n>/api`, `S<n>/sdk`, etc.).
+  Apply the split-into-arms rule: if the scenario spans more than 3
+  surfaces, more than 3 claim categories, or requires more than 1
+  independent oracle, split into arms with independent verdicts.
+
+For non-boundary scenarios, write `§7.M.S: not applicable (no
+boundary or fairness claim falsified)` and skip the fields. Do not
+invent surfaces just to fill the field.
+
+The §7.M.S sub-block is a *sibling* to §7.M (model / history /
+checker), not a replacement. A scenario falsifying both a
+consistency claim and a boundary claim fills both blocks.
+
+**Every scenario declares three budget tiers.** Replace the legacy
+single `Exit criteria` field with explicit Smoke / Hardening /
+Release budgets per scenario:
+
+- **Smoke budget** — minimum config + duration + faults + seeds
+  required for `PASS-smoke`.
+- **Hardening budget** — strictly stronger than smoke on every
+  dimension; required for `PASS-hardening`.
+- **Release budget** — long / repeated / statistical gate, OR an
+  explicit `not provided — <reason>. Revisit when: <condition>.`
+  declaration. Empty / "TBD" / "see §6b" are explicitly disallowed.
+
+The execute skill uses the budget tier actually met as a verdict
+precondition; the findings report surfaces every "not provided"
+release budget in a dedicated Release-budget disclosures section.
+
 ### 5b. Argue coverage adequacy
 
 A test plan that lists scenarios without arguing they are *enough*
@@ -381,6 +440,34 @@ summary, the coverage-adequacy argument per claim, the residual
 uncertainty list — the plan is not done. A list of scenarios is
 not a confidence argument.
 
+**Anti-pattern checks (run before declaring the plan done).**
+
+1. **Surface decomposition implied by name but missing in arms.** If
+   a scenario name contains "across all surfaces" or names multiple
+   surfaces but only one `Target test file` is declared — split into
+   arms.
+2. **Boundary claim without negative controls.** If a claim is in
+   `{boundary}` but §7.M.S `Negative controls` is empty — required
+   negative controls missing. (Tenancy / authz / namespace / routing
+   claims are subsumed under `boundary`; they do not appear as
+   separate categories.)
+3. **Fairness claim without per-group formula.** If a claim is in
+   `{fairness}` but the oracle is not a per-group formula from
+   `references/oracle-patterns.md` §14 — fairness criterion missing.
+4. **Vague oracle.** A scenario whose `Oracle` field reads as "no
+   leaks," "no unauthorised access," or similar prose without a
+   model / state comparison or formula — sharpen with a concrete
+   checker pattern.
+5. **Confidence statement missing untested-surface disclosure.** If
+   §7d does not name the untested surfaces for any boundary claim
+   whose §7.M.S arms include `NOT-RUN` or `PARTIAL-surface` — the
+   §7d surface-coverage disclosure rule requires that naming.
+6. **Release budget without disclosure.** If any scenario's
+   `Release budget` field is empty, equals "TBD", "see §6b", or any
+   value not matching either a concrete budget specification OR the
+   `not provided — <reason>. Revisit when: <condition>.` template
+   — absence must be an explicit disclosure, not a silent gap.
+
 ## Early exit
 
 If the change genuinely does not warrant a distributed test plan —
@@ -415,6 +502,10 @@ a ceremonial plan for changes that don't need one.
 - `references/history-discipline.md` — operation-history schema and
   ambiguous-outcome handling (required reading when any scenario
   will be serious)
+- `references/boundary-and-isolation-testing.md` — surface catalogs,
+  boundary claim matrix, confusable-identifier catalog,
+  negative-control anti-patterns (required reading when any scenario
+  falsifies a `boundary` or `fairness` claim)
 
 Each reference file follows the same shape: when to reach for it,
 what it detects well, what it misses, concrete tools, papers,
