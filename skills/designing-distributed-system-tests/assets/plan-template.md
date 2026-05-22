@@ -421,6 +421,8 @@ claims), list per-aspect confidence in a small table.
 | C16 | routing rejects stale cell hint           | high     | S_routing_rejects_wrong_cell PASS-hardening    |
 | C20 | API surface (tenant isolation)            | high     | S_api_tenant_isolation PASS-hardening           |
 | C20 | export pipeline (tenant isolation)        | low      | no export-path arm ran                          |
+| C28 | shard rebalance during sustained writes   | moderate | S_shard_rebalance_writes ran clean at 4 shards; not exercised at scale |
+| C33 | cross-region replication lag SLO          | low      | no scenario forced a region into recovery      |
 
 Confidence levels are `high` / `moderate` / `low`. Reasons are one
 line each, citing the specific scenario or gap that drove the
