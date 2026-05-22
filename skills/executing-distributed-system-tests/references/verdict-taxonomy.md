@@ -11,7 +11,17 @@ verdict states the execute skill assigns at run end.
 the *type* of bug (TaxDC categories: timing / ordering / partition /
 …). This file classifies the *outcome* of the test run.
 
-## The nine states
+**Budget tiers gate PASS verdicts.** A scenario whose run met only
+the smoke budget (smallest config, shortest duration, single seed)
+can produce at most `PASS-smoke`, never `PASS-hardening`, regardless
+of oracle output. The hardening verdict requires the plan's declared
+hardening-tier configuration, duration, seed count, and fault count
+to have all been met. The release verdict, similarly, requires the
+release-tier budget (or its explicit "not provided" disclosure to
+have been resolved). See the plan template's per-scenario budget
+fields.
+
+## The ten states
 
 ### `PASS-smoke`
 
@@ -114,33 +124,56 @@ decide whether the un-checked subset matters. `PARTIAL-model` is
 stronger evidence than `PARTIAL-surface`; it is still not full
 hardening.
 
+### `NOT-RUN`
+
+The arm (or scenario) was declared in the plan but was not attempted
+in this session. The skill is being honest about deferred work: a
+scenario or arm that the operator planned but the run did not reach.
+
+Distinct from `INCONCLUSIVE-env`, which means "we tried and a
+required capability was missing." `NOT-RUN` means "we did not try."
+Common causes: time-bounded session ran out before reaching this
+arm; the arm is gated behind a future release-tier budget; the
+harness for this surface is not yet built.
+
+The aggregation rule: any `NOT-RUN` arm caps the scenario-level
+verdict at `PARTIAL-surface`. The findings report names the
+deferred arm explicitly in the Surface coverage table; it does not
+silently fold into the aggregate.
+
 ## Decision tree (assign at run end)
 
 ```
-Did any FAIL register?
-├─ yes
-│   ├─ reproducer obtained on re-run with same seed?
-│   │   ├─ yes → FAIL-reproducible
-│   │   └─ no  → FAIL-nondeterministic
-│   └─ (no other branches; FAIL takes precedence)
-└─ no
-    Was the planned fault proven to land?
-    ├─ no
-    │   ├─ planned fault was scheduled? → INCONCLUSIVE-fault-not-proven
-    │   └─ no fault planned (smoke run)  → continue below
-    └─ yes (or smoke)
-        Did the declared §7.M checker run?
-        ├─ no  → PARTIAL-surface
-        └─ yes (full)
-        │   Did the history meet the checker's required fields?
-        │   ├─ no   → INCONCLUSIVE-oracle-too-weak
-        │   └─ yes
-        │       Did the checker cover all ops the scenario produced?
-        │       ├─ no  → PARTIAL-model
-        │       └─ yes
-        │           Was a fault active in the run?
-        │           ├─ no  → PASS-smoke
-        │           └─ yes → PASS-hardening
+Was the arm or scenario attempted at all?
+├─ no, declared in the plan but never started → NOT-RUN
+└─ yes
+    Was `INCONCLUSIVE-env` triggered before the run started?
+    ├─ yes → INCONCLUSIVE-env
+    └─ no
+        Did any FAIL register?
+        ├─ yes
+        │   ├─ reproducer obtained on re-run with same seed?
+        │   │   ├─ yes → FAIL-reproducible
+        │   │   └─ no  → FAIL-nondeterministic
+        │   └─ (no other branches; FAIL takes precedence)
+        └─ no
+            Was the planned fault proven to land?
+            ├─ no
+            │   ├─ planned fault was scheduled? → INCONCLUSIVE-fault-not-proven
+            │   └─ no fault planned (smoke run)  → continue below
+            └─ yes (or smoke)
+                Did the declared §7.M checker run?
+                ├─ no  → PARTIAL-surface
+                └─ yes (full)
+                │   Did the history meet the checker's required fields?
+                │   ├─ no   → INCONCLUSIVE-oracle-too-weak
+                │   └─ yes
+                │       Did the checker cover all ops the scenario produced?
+                │       ├─ no  → PARTIAL-model
+                │       └─ yes
+                │           Was a fault active in the run?
+                │           ├─ no  → PASS-smoke
+                │           └─ yes → PASS-hardening
 ```
 
 **Non-serious scenarios.** If §7.M was marked "not applicable" (the
@@ -149,13 +182,15 @@ checker-required nodes do not apply. Use the scenario's Oracle
 field as the success criterion: smoke run → `PASS-smoke`; fault
 active + Oracle passed → `PASS-hardening`.
 
-`INCONCLUSIVE-env` is a pre-run verdict: the scenario never started
-because the environment lacked a capability. Assign before entering
-the tree above.
+The pre-execution branches at the top of the tree (NOT-RUN and
+INCONCLUSIVE-env) are mutually exclusive. NOT-RUN means the arm or
+scenario was declared in the plan but the session did not attempt
+it. INCONCLUSIVE-env means the attempt started but a required
+capability was missing.
 
 ## Findings-report column
 
-The findings report's scenario-results table uses these nine values
+The findings report's scenario-results table uses these ten values
 in its `Verdict` column. The column header links here. The session-
 level summary (DONE / DONE_WITH_CONCERNS / INCONCLUSIVE / FAIL /
 BLOCKED) is computed from the per-scenario verdicts via the rules in
