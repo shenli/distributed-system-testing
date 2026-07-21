@@ -1,0 +1,13 @@
+{
+  "name": "distributed-testing-skills",
+  "owner": {
+    "name": "Li Shen"
+  },
+  "plugins": [
+    {
+      "name": "distributed-testing-skills",
+      "source": "./",
+      "description": "Two coupled skills that design and execute claim-driven, Jepsen-style test plans for distributed and stateful systems."
+    }
+  ]
+}

@@ -37,7 +37,7 @@ to design a project-wide test plan for this codebase.
 In scope: <list subsystems / crates / services to cover>
 Out of scope: <list with one-line reason each>
 
-Save the plan to ./testing-plans/<short-slug>.md.
+Save the plan to docs/testing-plans/<short-slug>.md.
 
 Required sections per the template at
 ~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/assets/plan-template.md:
@@ -63,7 +63,7 @@ to design a change-scoped test plan.
 
 Change under test: <commit hash | PR #N | feature description>
 
-Save the plan to ./testing-plans/<short-slug>.md.
+Save the plan to docs/testing-plans/<short-slug>.md.
 
 Required sections per the template at
 ~/.local/share/distributed-testing-skills/skills/designing-distributed-system-tests/assets/plan-template.md:

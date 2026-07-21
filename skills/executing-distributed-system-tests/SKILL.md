@@ -1,6 +1,6 @@
 ---
 name: executing-distributed-system-tests
-description: Use when running a previously designed distributed-systems test plan against a real or simulated cluster — driving fault injection, workload, chaos scenarios, linearizability / consistency runs, durability tests, partition tests, crash-recovery tests, upgrade tests, performance/SLO runs, tenant isolation runs, boundary or authz runs, fairness / noisy-neighbor runs, or release validation. Also use when asked to "execute the plan", "reproduce a distributed bug", "run stability tests", "drive chaos", "validate a release end-to-end", "run the tenant isolation tests", "check fairness across tenants", or when a plan file exists at docs/testing-plans/ or any caller-specified location and needs to be run. Discovers the SUT's existing test toolbox (tools/, scripts/, runbooks) and uses it rather than reinventing, captures nemesis landing evidence per scenario, runs the green-but-broken and weak-oracle audits before any PASS, and (for boundary or fairness scenarios with §7.M.S arms in the plan) runs each surface arm separately with its own verdict and applies a downgrade rule so the aggregate verdict cannot silently fold an untested surface into a passing scenario. Produces a session directory of raw artifacts plus a structured findings report carrying a 10-state verdict (PASS-smoke / PASS-hardening / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model / NOT-RUN), a SUT / harness / checker / environment blame classification per finding, a TaxDC bug-type tag, per-arm Surface coverage table, and Release-budget disclosures.
+description: Use when running a previously designed distributed-systems test plan against a real or simulated cluster — driving fault injection, workload, chaos scenarios, linearizability / consistency runs, durability, partition, crash-recovery, upgrade, performance/SLO runs, tenant isolation runs, boundary or authz runs, fairness / noisy-neighbor runs, or release validation. Also use when asked to "execute the plan", "reproduce a distributed bug", "run stability tests", "drive chaos", "validate a release end-to-end", "run the tenant isolation tests", or when a plan file exists at docs/testing-plans/ or any caller-specified location and needs to be run. Discovers and reuses the SUT's test toolbox rather than reinventing, captures nemesis landing evidence per scenario, runs the green-but-broken and weak-oracle audits before any PASS, and for boundary or fairness scenarios with §7.M.S arms runs each surface arm with its own verdict under a downgrade rule so the aggregate cannot fold an untested surface into a pass.
 ---
 
 # Executing Distributed-System Tests
@@ -21,9 +21,10 @@ The "green-but-broken" checks are not optional.
 
 If a plan file path was supplied, read it. If the user described
 a plan in conversation, extract the scenario list. If the plan
-is missing oracles or exit criteria, halt — hand back to the
-design skill rather than improvise. Improvising an oracle in the
-moment is how green-but-broken results get produced.
+is missing oracles or per-scenario budget tiers (Smoke / Hardening
+/ Release, per the plan template's §7 scenario fields), halt — hand
+back to the design skill rather than improvise. Improvising an
+oracle in the moment is how green-but-broken results get produced.
 
 ### 2. Discover the SUT toolbox
 
@@ -215,8 +216,8 @@ For each scenario:
    `references/verdict-taxonomy.md`: PASS-smoke, PASS-hardening,
    FAIL-reproducible, FAIL-nondeterministic, INCONCLUSIVE-env,
    INCONCLUSIVE-oracle-too-weak, INCONCLUSIVE-fault-not-proven,
-   PARTIAL-surface, PARTIAL-model. Apply the decision tree in that
-   file to assign the verdict; do not free-form. Record the verdict
+   PARTIAL-surface, PARTIAL-model, NOT-RUN. Apply the decision tree in
+   that file to assign the verdict; do not free-form. Record the verdict
    together with the oracle execution evidence (op count consumed,
    anomalies found) and the §7.M nemesis landing signal — both are
    required for any PASS-hardening claim.
@@ -335,15 +336,19 @@ but not whether to ship. A list of verdicts is not a confidence
 verdict.
 
 **Session-level verdict.** Set the headline session verdict by
-the strongest evidence found, not by counting:
+the strongest evidence found, not by counting. Every per-scenario
+verdict maps into one of five session values:
 - Any FAIL with a reproducer → session is FAIL (lead with the
   finding, even if most scenarios were INCONCLUSIVE).
-- No FAIL, at least one PASS with cited evidence → session is
-  DONE_WITH_CONCERNS if there are INCONCLUSIVEs, DONE if all
-  ran clean.
-- No PASS, all INCONCLUSIVE → session is INCONCLUSIVE.
-- Nothing ran at all (couldn't load plan, couldn't reach the
-  SUT) → session is BLOCKED.
+- No FAIL, at least one PASS-smoke/PASS-hardening with cited
+  evidence → session is DONE if every other scenario also PASSed
+  clean; DONE_WITH_CONCERNS if any scenario was INCONCLUSIVE-*,
+  PARTIAL-surface, PARTIAL-model, or NOT-RUN. Treat PARTIAL-* and
+  NOT-RUN as concerns, never as clean passes.
+- No PASS and no FAIL, but at least one scenario produced signal
+  (INCONCLUSIVE-* or PARTIAL-*) → session is INCONCLUSIVE.
+- Nothing ran at all — every scenario NOT-RUN, or couldn't load
+  the plan / reach the SUT → session is BLOCKED.
 
 A high INCONCLUSIVE fraction is not by itself a problem if each
 INCONCLUSIVE has an honest single-line reason; it just means the

@@ -9,7 +9,8 @@ searchable across runs and across projects.
 **not** classify the **test outcome** — for that, see
 `verdict-taxonomy.md` (PASS-smoke / PASS-hardening / FAIL-reproducible
 / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak
-/ INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model).
+/ INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model /
+NOT-RUN).
 Nor does it classify the **component** holding the bug — for that,
 see the "Classify blame before filing" section of
 `test-case-reduction.md` (SUT / harness / checker / environment).

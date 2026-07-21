@@ -136,30 +136,51 @@ State the result of each red-flag check from
 `references/green-but-broken-red-flags.md`. A scenario marked PASS
 without these checks completing is not actually PASS.
 
-Per scenario (cite evidence per checked item):
+Per scenario, record the result of all ten numbered red-flag checks
+from `references/green-but-broken-red-flags.md` (cite evidence per
+checked item):
 
-- [ ] Workload generator produced the expected ops/sec throughout
-- [ ] Oracle ran on every intended cycle (cite the op count it
+- [ ] 1. Workload generator produced the expected ops/sec throughout
+- [ ] 2. Oracle ran on every intended cycle (cite the op count it
   consumed)
-- [ ] Faults verifiably injected (cite the landing-evidence signal
+- [ ] 3. Faults verifiably injected (cite the landing-evidence signal
   declared in §7.M)
-- [ ] Clock skew did not silently mask the timing assertion
-- [ ] Run duration met the plan's exit criterion
-- [ ] No silent error suppression (grep'd SUT log for swallowed
+- [ ] 4. Fault did not silently no-op (rule out wrong chain / wrong
+  interface / orchestrator-reversed restart)
+- [ ] 5. Clock skew did not silently mask the timing assertion
+- [ ] 6. Run duration met the budget tier being claimed (cite Smoke /
+  Hardening / Release tier met)
+- [ ] 7. No silent error suppression (grep'd SUT log for swallowed
   panics)
-- [ ] Recovery completed (post-fault, SUT returned to nominal —
+- [ ] 8. Recovery completed (post-fault, SUT returned to nominal —
   not "stayed up degraded")
+- [ ] 9. Baseline comparison is fair (re-baselined if the harness
+  changed)
+- [ ] 10. Statistical claims replicated (one PASS is not PASS)
 
-Per-scenario weak-oracle audit (any unchecked → not eligible for
-`PASS-hardening`):
+Per-scenario weak-oracle audit — record the result of all fourteen
+items from the "Weak oracles" section of
+`references/green-but-broken-red-flags.md` (any unchecked → not
+eligible for `PASS-hardening`):
 
 - [ ] Oracle is not "final state only"
 - [ ] Oracle is not "logs only"
 - [ ] Oracle is not "health checks only"
 - [ ] If failover-based, more than one failover was exercised
+- [ ] Not "no-error metrics" alone (SUT did not swallow the errors)
+- [ ] Not "short runs" alone (duration justified by the claimed tier)
+- [ ] At least one asymmetric partition variant covered (not
+  symmetric-only) if applicable
 - [ ] Recorder caught client-library-hidden retries (or N/A — the
   library does not hide retries)
 - [ ] Timestamps are monotonic, not wall-clock
-- [ ] At least one fault-set variant (asymmetric, mixed-version,
-  etc.) was covered if applicable
+- [ ] More than one cluster topology run if the claim is "any
+  quorum-respecting size"
 - [ ] At least three PRNG seeds tried for any statistical claim
+- [ ] Not single-surface only — boundary claims cover admin / export
+  / SDK / background-job / observability paths (or N/A — not a
+  boundary claim)
+- [ ] Negative controls present, not positive-control only (or N/A —
+  not a boundary claim)
+- [ ] Fairness oracle has a per-group breakdown, not aggregate-p99
+  only (or N/A — not a fairness claim)

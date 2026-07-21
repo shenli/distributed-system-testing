@@ -54,7 +54,8 @@ The two newest categories disambiguate two distinct concepts:
 
 - `isolation` means consistency-isolation anomalies (G2-item,
   serializability, Elle-detectable read/write anomalies). Tested
-  with checkers from `oracle-patterns.md` §1 and §3.
+  with the checker from `oracle-patterns.md` §1 (linearizability /
+  serializability check on an op history).
 - `boundary` means access-boundary semantics: tenant isolation,
   authz, namespace, routing, multi-protocol access, compatibility
   across API surfaces. Subsumes tenancy / authz / namespace /
@@ -93,6 +94,8 @@ for the maintainer to either document or remove.
 If §1c is empty, that itself is worth stating: "the docs and code
 appear aligned on every behavior the plan exercised." Don't leave
 the section out — explicit emptiness is the signal.
+
+## 2. SUT model
 
 One paragraph each:
 - **Tenancy / isolation:** how is multi-tenancy enforced?
@@ -267,8 +270,11 @@ and runs.
 
 Mandatory if any claim referenced in this scenario's `Falsifies if it
 FAILs` row is in `{safety, durability, idempotency, isolation,
-ordering, membership}`. Otherwise: write `§7.M: not applicable (no
-gated claim category falsified)` and skip the fields below.
+ordering, membership}`, OR if this scenario decomposes into §7.M.S
+arms (boundary / fairness — see below): every §7.M.S arm is always
+serious and carries its own mandatory §7.M block, one per arm.
+Otherwise: write `§7.M: not applicable (no gated claim category
+falsified)` and skip the fields below.
 
 - **Model under test:** `register | map | queue | log | lock | lease | session | membership-table | counter | ledger | other(<name>)`
   — see `references/history-discipline.md` for what each model implies

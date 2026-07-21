@@ -25,9 +25,9 @@ in:
 For consistency-isolation claims (the existing `isolation`
 category, meaning G2-item / serializability / Elle-detectable
 anomalies) this file is *not* the right reference — use
-`oracle-patterns.md` §1 (linearizability) or §3 (serializability)
-instead. The legend uses two distinct labels (`isolation` vs
-`boundary`) for two distinct concepts.
+`oracle-patterns.md` §1 (linearizability / serializability check on
+an op history) instead. The legend uses two distinct labels
+(`isolation` vs `boundary`) for two distinct concepts.
 
 ## Surface catalogs by system kind
 
@@ -136,9 +136,10 @@ its own §7.M block (model / history / checker), its own oracle, and
 its own verdict at run end.
 
 The arms' verdicts aggregate to a scenario-level verdict via the
-downgrade rule (see `verdict-taxonomy.md`): any `NOT-RUN` or
-`PARTIAL-*` arm caps the scenario-level verdict at
-`PARTIAL-surface`, regardless of which arms passed.
+downgrade rule (see the executing skill's
+`references/verdict-taxonomy.md`): any `NOT-RUN` or `PARTIAL-*` arm
+caps the scenario-level verdict at `PARTIAL-surface`, regardless of
+which arms passed.
 
 ## Confusable-identifier catalog
 
