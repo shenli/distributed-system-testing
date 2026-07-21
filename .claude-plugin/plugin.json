@@ -1,0 +1,19 @@
+{
+  "name": "distributed-testing-skills",
+  "version": "0.1.0",
+  "description": "Two coupled skills that design and execute claim-driven, Jepsen-style test plans for distributed and stateful systems.",
+  "author": {
+    "name": "Li Shen"
+  },
+  "homepage": "https://github.com/shenli/distributed-system-testing",
+  "repository": "https://github.com/shenli/distributed-system-testing",
+  "license": "MIT",
+  "keywords": [
+    "distributed-systems",
+    "testing",
+    "jepsen",
+    "chaos-engineering",
+    "fault-injection",
+    "linearizability"
+  ]
+}

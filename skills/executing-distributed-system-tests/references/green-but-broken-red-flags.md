@@ -20,8 +20,9 @@ actually pass. Run this list before declaring a scenario PASS.
 5. **Clock skew did not mask a timing assertion.** If the
    assertion depends on monotonic time, the timing source must
    be monotonic — not wall clock.
-6. **Run duration met the plan's exit criterion.** Short runs
-   often miss bugs that only manifest after sustained pressure.
+6. **Run duration met the budget tier being claimed.** Short runs
+   often miss bugs that only manifest after sustained pressure; a
+   `PASS-hardening` claim requires the plan's hardening-tier duration.
 7. **No silent error suppression.** Grep the SUT log for
    exception / panic / "Internal error" lines that the oracle
    did not see because they were swallowed by a higher layer.
@@ -60,7 +61,7 @@ regression."
   `timeout_marker` set, then a no-lost-ack check.
 - **Short runs.** 60-second chaos windows miss bugs that only
   manifest after sustained pressure (compaction races, slow
-  leaks, queue overflow). Plan exit criteria must justify the
+  leaks, queue overflow). The budget tier claimed must justify the
   duration.
 - **Symmetric partitions only.** Real production partitions are
   often one-way or asymmetric. Cover at least one asymmetric

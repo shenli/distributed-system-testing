@@ -1,6 +1,6 @@
 ---
 name: designing-distributed-system-tests
-description: Use when designing a test plan for a distributed or stateful system — anything with persistence, replication, consensus, retries, idempotency, async messaging, multi-tenancy, or partial failure. Plans are claim-driven; investigate the product's claimed guarantees first, then design hypotheses and scenarios that try to falsify those claims under fault. Handles both change-scoped plans (a specific commit / PR / feature) and project-wide plans (a holistic plan for the whole system with existing-test inventory and gap analysis). Also use when asked to write a stability plan, fault matrix, release-validation plan, durability test plan, partition test plan, upgrade test plan, crash-recovery test plan, linearizability test plan, deterministic-simulation plan, tenant isolation test plan, authz / boundary test plan, namespace isolation plan, multi-protocol access plan, fairness test plan, noisy-neighbor test plan, "test plan to enough coverage", "what should we be testing", or "make a holistic test plan". Trigger even if the user just says "what should we test for this change", "design the test plan for this project", "are my tenants actually isolated", or "how do I test fairness across tenants / shards / queues". Produces a structured Markdown plan file with hypothesis-driven scenarios drawn from a curated technique catalog (Jepsen+Elle, deterministic simulation, chaos/fault injection, fuzzing, formal methods, property+metamorphic, performance, crash-recovery+upgrade) and, for claims involving consistency / durability / idempotency / isolation / ordering / membership, a model+history+checker discipline (§7.M); for claims involving boundary semantics (tenant isolation, authz, namespace, routing, multi-protocol) or fairness, a surface-decomposition discipline (§7.M.S) that splits the scenario into per-surface arms with independent verdicts.
+description: Use when designing a test plan for a distributed or stateful system — anything with persistence, replication, consensus, retries, idempotency, async messaging, multi-tenancy, or partial failure. Plans are claim-driven: investigate the product's claimed guarantees first, then design hypotheses and scenarios that try to falsify those claims under fault. Handles change-scoped plans (a commit / PR / feature) and project-wide plans (holistic, with existing-test inventory and gap analysis). Also use when asked to write a stability plan, fault matrix, release-validation plan, durability / partition / upgrade / crash-recovery / linearizability / deterministic-simulation plan, tenant isolation / authz / boundary plan, namespace isolation plan, fairness / noisy-neighbor plan, "what should we be testing", or "make a holistic test plan". Trigger even if the user just says "what should we test for this change", "are my tenants actually isolated", or "how do I test fairness across tenants / shards / queues".
 ---
 
 # Designing Distributed-System Tests
@@ -93,6 +93,17 @@ Categorise each claim:
 - **Membership** — "a node that fails its liveness probe is removed
   from the cluster membership view within N seconds", "every joined
   member appears in the membership table exactly once"
+- **Boundary** — access-boundary semantics: "tenant A's data is never
+  reachable from tenant B on any surface", "a request scoped to
+  namespace X never routes to namespace Y". Subsumes tenancy / authz
+  / namespace / routing / multi-protocol; do not file those as
+  separate categories. Triggers the §7.M.S surface-decomposition
+  discipline (see step 3 and `references/boundary-and-isolation-testing.md`).
+- **Fairness** — per-group performance and noisy-neighbor isolation:
+  "no tenant can starve another for throughput", "one shard's load
+  does not blow another shard's p99". Group can be tenant, shard,
+  queue, partition, region, priority class, user, table, or workload
+  class. Also triggers §7.M.S.
 
 If the project does NOT explicitly document a claim that appears
 in the code, write it as an *inferred* claim and mark it as such —
@@ -101,9 +112,10 @@ catches places where the docs lie or are silent about real
 guarantees the implementation depends on.
 
 When done, you should have a numbered claims list (C1, C2, …). The
-hypothesis-generation step (3) will reference these by number, the
-coverage matrix (5) tracks claim × fault, and scenarios (7) state
-which claim(s) each is trying to falsify. If a hypothesis cannot
+hypothesis-generation step (step 3) will reference these by number,
+the coverage matrix (template §5) tracks claim × hypothesis, and
+scenarios (template §7) state which claim(s) each is trying to
+falsify. If a hypothesis cannot
 be tied back to a claim, either name the missing claim explicitly
 or drop the hypothesis — untethered hypotheses produce ceremonial
 scenarios.
@@ -248,8 +260,8 @@ dependent scenarios INCONCLUSIVE.
 For each technique, write concrete scenarios. Each scenario must
 specify: workload (what generator, rate, distribution, duration);
 faults (schedule of what is injected when); oracle (the property
-checked and how); observability required; exit criteria (pass / fail /
-inconclusive thresholds).
+checked and how); observability required; and the three budget
+tiers (Smoke / Hardening / Release — see the field list below).
 
 Resist "logs look fine" as an oracle. The oracle must be a
 machine-checkable property or a metric SLO with a defined threshold.
@@ -257,9 +269,9 @@ machine-checkable property or a metric SLO with a defined threshold.
 In project-wide mode, prioritise scenarios that fill the highest-
 leverage gaps from step 4b, and tag each scenario with both the
 hypothesis-rows it closes AND the claim(s) it tries to falsify.
-Long-tail "nice to have" scenarios go into section 7 (open
-questions / followups), not section 5 — the plan should be
-actionable, not aspirational.
+Long-tail "nice to have" scenarios go into template §9 (open
+questions / followups), not the actionable scenario list in
+template §7 — the plan should be actionable, not aspirational.
 
 Every scenario name should encode the claim it targets:
 `linearizable_per_session_under_partition`,
@@ -269,8 +281,8 @@ after its setup ("3-node cluster with chaos") tells you nothing
 about what it actually verifies.
 
 **Each scenario is an executable spec.** Beyond the prose
-fields (Workload, Faults, Oracle, Observability, Exit criteria),
-emit two more:
+fields (Workload, Faults, Oracle, Observability, and the three
+budget tiers), emit two more:
 
 - **Target test file** — the relative SUT path where this test
   will live if/when it becomes a permanent regression. Follow
@@ -294,7 +306,12 @@ plan's prose changes, the test should be regenerated.
 **Fill §7.M for serious scenarios.** If any claim in this scenario's
 `Falsifies if it FAILs` row belongs to `{safety, durability,
 idempotency, isolation, ordering, membership}`, the scenario is
-*serious* and must fill the §7.M sub-block in the plan template:
+*serious* and must fill the §7.M sub-block in the plan template.
+A scenario that decomposes into §7.M.S arms (boundary / fairness) is
+also serious: each arm is always serious and carries its own §7.M
+block, regardless of claim category — the executing skill scores
+every arm through the §7.M checker node of the verdict decision tree.
+The §7.M sub-block:
 
 - **Model under test** — pick from the picker in
   `references/history-discipline.md`.
@@ -461,8 +478,9 @@ not a confidence argument.
    claims are subsumed under `boundary`; they do not appear as
    separate categories.)
 3. **Fairness claim without per-group formula.** If a claim is in
-   `{fairness}` but the oracle is not a per-group formula from
-   `references/oracle-patterns.md` §14 — fairness criterion missing.
+   `{fairness}` but the oracle is not a per-group formula from the
+   executing skill's `references/oracle-patterns.md` §14 — fairness
+   criterion missing.
 4. **Vague oracle.** A scenario whose `Oracle` field reads as "no
    leaks," "no unauthorised access," or similar prose without a
    model / state comparison or formula — sharpen with a concrete

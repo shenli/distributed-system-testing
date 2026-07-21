@@ -62,8 +62,8 @@ field's hard-won knowledge:
 End-to-end, the two skills produce:
 
 ```
-testing-plans/<slug>.md             ← plan with §0–§9 (see below)
-test-sessions/<UTC>/
+docs/testing-plans/<slug>.md        ← plan with §0–§9 (see below)
+test-sessions/<slug>/<UTC>/
   ├── session-log.md                 ← timeline + toolbox + env probe
   ├── logs/                          ← per-scenario stdout/stderr
   ├── metrics/                       ← metric snapshots
@@ -198,6 +198,21 @@ ln -snf ~/.local/share/distributed-testing-skills/skills/executing-distributed-s
 # Codex / Copilot CLI / Cursor / Gemini / others: see INSTALL.md
 ```
 
+### As a Claude Code plugin (alternative)
+
+The repo carries a plugin manifest and a marketplace manifest under
+`.claude-plugin/`, so Claude Code can install it as a plugin instead
+of symlinking:
+
+```
+/plugin marketplace add shenli/distributed-system-testing
+/plugin install distributed-testing-skills@distributed-testing-skills
+```
+
+Both skills are auto-discovered from `skills/`. The one-line
+`INSTALL.md` flow above stays the agent-agnostic path (Codex, Copilot
+CLI, Cursor, Gemini).
+
 ## Usage
 
 Once the skills are installed, you have two ways to drive them:
@@ -277,7 +292,7 @@ checklist. The catalog index pairs symptoms to references.
 
 ```
 .
-├── plugin.json                                 ← optional plugin manifest
+├── .claude-plugin/                             ← plugin + marketplace manifests
 ├── README.md                                   ← this file
 ├── INSTALL.md                                  ← idempotent install / update (paste-this)
 ├── USAGE.md                                    ← copy/paste prompts for every workflow
@@ -303,9 +318,9 @@ checklist. The catalog index pairs symptoms to references.
 │                                                 red-flags (incl. weak-oracle audit),
 │                                                 finding-classification (TaxDC),
 │                                                 verdict-taxonomy (10-state)
-├── evals/                                      ← eval suites for both skills
-├── verification/                               ← real runs against AgentDB (concrete output)
-└── specs/                                      ← original design spec
+├── evals/                                      ← manual regression prompts (see evals/README.md)
+├── verification/                               ← real local runs (gitignored — not in the repo)
+└── specs/                                      ← original design spec (historical snapshot)
 ```
 
 ## Status
@@ -318,24 +333,22 @@ accumulates; expect minor updates to the SKILL.mds and templates
 over the next few iterations.
 
 Real plan outputs, session directories, and findings reports from
-those runs live under [`verification/`](verification/), one
-subdirectory per run, each with a `README.md` describing what
-passed, what failed, and what the skill surfaced about itself in
-the process. Notable runs:
+those runs are kept locally under `verification/` (one subdirectory
+per run). That directory is **gitignored** — the raw artifacts are
+large and machine-specific, so they are not part of this repo. Runs
+to date include a change-scoped plan + execution for AgentDB commit
+`fab7d9d` (durable idempotent append replay; a 670-line plan with 16
+hypotheses across all eight failure-mode categories), consistency +
+crash-recovery runs with linearizability checking, project-wide plans
+with a full coverage matrix, and a cross-server multi-tier run against
+LMCache.
 
-- [`verification/agentdb-fab7d9d/`](verification/agentdb-fab7d9d/) —
-  change-scoped plan + execution for AgentDB commit `fab7d9d` (durable
-  idempotent append replay); 670-line plan with 16 hypotheses across
-  all eight failure-mode categories.
-- [`verification/agentdb-jepsen/`](verification/agentdb-jepsen/) —
-  consistency + crash-recovery run with linearizability checking.
-- [`verification/agentdb-projectwide-lidev/`](verification/agentdb-projectwide-lidev/)
-  and `-v2` — project-wide plans with full coverage matrix +
-  adequacy argument + confidence statement.
-
-There is also an eval suite under [`evals/`](evals/) (separate
-`evals.json` for the design and execute skills) — used to validate
-behavioural changes to the SKILL.md bodies between iterations.
+The [`evals/`](evals/) directory holds manual regression prompts
+(separate `evals.json` for the design and execute skills) used to
+sanity-check behavioural changes to the SKILL.md bodies between
+iterations. They reference the author's local SUT checkouts, so they
+are prompts to re-run by hand, not an automated suite — see
+[`evals/README.md`](evals/README.md).
 
 ## Acknowledgements
 
