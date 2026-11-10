@@ -58,10 +58,42 @@ ls ~/.claude/skills/ | grep -E "^(designing|executing)-distributed-system-tests$
 Symlinks always point at the latest cloned content — no further
 action needed when the user re-runs this guide later to update.
 
-### Codex CLI, Copilot CLI, Cursor, Gemini, or any other agent
+### Codex
 
-These agents don't have a Claude-style skill auto-load directory.
-Drop a pointer block into the user's home `AGENTS.md`. The block
+Codex discovers local skills in `~/.agents/skills/` and supports symlinked
+folders. Link the skills from the shared checkout so updates are picked up
+without copying files. See the [official Codex skills documentation](https://developers.openai.com/codex/skills).
+
+```bash
+mkdir -p "$HOME/.agents/skills"
+for skill_path in "$SKILLS_DIR"/skills/*/; do
+    skill_name=$(basename "$skill_path")
+    skill_target="${skill_path%/}"
+    skill_link="$HOME/.agents/skills/$skill_name"
+    if [ -e "$skill_link" ] || [ -L "$skill_link" ]; then
+        if [ -L "$skill_link" ] && [ "$(readlink "$skill_link")" = "$skill_target" ]; then
+            continue
+        fi
+        echo "Existing skill at $skill_link; resolve it before installing."
+        exit 1
+    fi
+    ln -s "$skill_target" "$skill_link"
+done
+```
+
+If an existing entry conflicts, ask the user how to resolve it instead of
+overwriting it. In Codex CLI or the IDE extension, use `/skills` to check that
+both skills appear, or type `$` to select one by name. If they do not appear
+after installation, restart Codex. The explicit `SKILL.md` paths in
+[`USAGE.md`](USAGE.md) also work without relying on automatic discovery.
+
+For project-only discovery, use `<project>/.agents/skills/` instead. If sharing
+skills through Git, vendor the skill folders or document the setup step;
+absolute symlinks to a developer's home directory are not portable.
+
+### Other agents using AGENTS.md
+
+For an agent configured to read `AGENTS.md`, use a pointer block. The block
 references the skill paths by symbolic name, so re-running this
 guide is idempotent — replace the existing block if present.
 
@@ -100,8 +132,10 @@ this guide replaces it cleanly without duplication.
 
 ### Per-project alternative
 
-If the user prefers per-project setup over machine-wide, use the
-project's `AGENTS.md` instead of `~/AGENTS.md`. Same marker pattern.
+For the AGENTS.md integration, if the user prefers per-project setup over
+machine-wide, use the project's `AGENTS.md` instead of `~/AGENTS.md`.
+Same marker pattern. For Codex skill discovery, use the project-local
+`.agents/skills/` option above.
 
 ## Step 3 — Verify
 
@@ -135,5 +169,5 @@ Two coupled skills:
   into the SUT for review).
 
 See the cloned `README.md` for full feature list and the
-`skills/*/references/` directory for the 8-file technique catalog +
-16-item common-pitfalls reference.
+`skills/*/references/` directory for the technique catalog and common-pitfalls
+reference.

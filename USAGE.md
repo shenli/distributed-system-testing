@@ -5,7 +5,8 @@ paste any of the prompts below at your AI agent. Each is self-contained:
 fill in the angle-bracket placeholders, paste, run.
 
 Auto-trigger note: Claude Code with skills under `~/.claude/skills/`
-will pick the right skill from a casual natural-language ask too —
+or Codex with skills under `~/.agents/skills/` can select a matching
+skill from a casual natural-language ask too —
 "design a test plan for this project" usually works without
 copying any prompt below. The explicit prompts here are for when
 you want a specific mode, output path, or scope.
@@ -15,7 +16,7 @@ SKILL.md at its install path (`~/.local/share/distributed-testing-skills/...`)
 instead of just the skill name. This works for any agent in any
 working directory — Claude Code, Codex, Copilot CLI, Cursor,
 Gemini — without depending on whether your agent auto-loaded the
-skill from `~/.claude/skills/` or `~/AGENTS.md`. If you installed
+skill from its discovery directory or an `AGENTS.md` pointer. If you installed
 the skills at a different path, substitute it.
 
 **Before you start: start your agent inside the SUT source
