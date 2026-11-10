@@ -38,12 +38,20 @@ victim and put both in the session log.
 | Fault | Mechanism | Evidence | Cleanup |
 |---|---|---|---|
 | Disk full | fill the FS with a junk file | write errors in SUT log | `rm` the junk |
-| fsync loss / power loss | torturing-databases-style block tracer, or filesystem with `nobarrier`, or simulated via process kill between write and fsync | crash, mismatch on recovery | reset disk image |
+| Loss of unsynced writes / simulated power loss | configured LazyFS-style filesystem or block-level power-loss harness | recorder identifies unsynced data discarded and the crash boundary | reset disposable disk image |
 | Slow disk | `cgroup` IO throttling | IO latency histogram shift | remove throttle |
-| Bit flip on read / write | dm-flakey, dm-error, or in-app injection | checksum failures | remove dm target |
-| fsync failure | dm-flakey configured to drop fsync; or eatmydata; or syscall interception | crash-recovery uncovers lost writes | remove dm target / disable interception |
-| Storage corruption (typed) | dm-flakey returning EIO; or dm-error; or bitrot via dd if=/dev/urandom into the device | SUT surfaces checksum / integrity errors | remove dm target |
+| Silent bit change | targeted mutation of a disposable WAL/data-file copy or explicit corruption injector | file/offset and before/after bytes or hashes; subsequent recovery behavior | restore copy |
+| fsync failure | syscall interception returning an explicit error at the selected fsync | intercepted call and returned error, SUT response | disable interception |
+| Storage IO error | dm-error or configured EIO injection | failed IO at the selected path, SUT response | remove test target |
+| Truncation / misdirected block | truncate or substitute blocks in a disposable storage copy | original length/hash, offsets and source blocks, resulting bytes, restart boundary | restore copy |
 | Backup/restore race | trigger backup mid-workload, then restore mid-workload, then continue | restore-time markers in log; oracle compares pre/post replicas | wait for restore to complete |
+
+Process death does not discard the kernel's dirty page cache. Do not
+substitute `kill -9`, disabled barriers, or skipped fsync calls for a
+power-loss model without stating the weaker fault semantics. Returned
+IO errors and silent corruption also need separate arms. For storage
+mutation, retain an untouched copy, constrain edits to disposable test
+storage, and check client-visible state after recovery, not just logs.
 
 ## Time faults
 

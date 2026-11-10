@@ -39,3 +39,25 @@ Per-scenario: minutes to hours; planning cost is high because the fault matrix (
 3. For idempotent operations, drive explicit retry storms to surface double-apply bugs.
 4. For upgrades, test mixed-version state at every intermediate step, not only N → N+1 transitions.
 5. Treat fsync as a contract—if the filesystem doesn't fsync, the SUT doesn't fsync for test purposes; make that assumption explicit.
+
+## Separate recovery failure models
+
+A process kill leaves the kernel page cache alive; it does not simulate
+power loss. Choose distinct arms for process death, loss of unsynced data
+(for example, a configured LazyFS-style filesystem), returned IO/fsync
+errors, and silent corruption. Deliberately disabling fsync is a different
+contract from a storage device returning an error. Declare which writes
+each mode promises to preserve at acknowledgement.
+
+For corruption testing, use disposable copies and record exact files,
+offsets, original/mutated bytes or hashes, and restart boundaries. Treat
+bit changes, truncation, and block substitution/reordering as separate
+cases. A checksum warning alone is not success: verify the documented
+recovery policy, including refusal to serve, explicit repair, or recovery
+from an intact replica. Do not accept silently serving a partial history
+or initializing an empty store as successful recovery.
+
+Prove the storage path under test was reached: table/index files, flushes,
+checkpoints, or compactions need their own evidence. Record any reduced
+test thresholds. A run that wrote only a WAL cannot establish correctness
+of recovery from table files; leave that coverage open.

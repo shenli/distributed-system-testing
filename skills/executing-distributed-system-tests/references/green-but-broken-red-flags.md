@@ -3,6 +3,10 @@
 A scenario that "passed" without these checks completing did not
 actually pass. Run this list before declaring a scenario PASS.
 
+Mark fault-only checks inapplicable for explicitly planned no-fault
+campaigns, citing the plan. A scheduled fault that failed to land is
+not inapplicable. Budget and oracle checks apply in both cases.
+
 1. **Workload actually generated the intended load.** Throughput
    chart shows the expected ops/sec for the expected duration.
    If the generator silently stopped or rate-collapsed, the test
@@ -49,7 +53,7 @@ regression."
   (invariant-over-final-state).
 - **Logs only.** Greppable error lines are noise; the absence of
   errors is not the presence of correctness. Pair with: an actual
-  property checker from `oracle-patterns.md` §1–§13.
+  property checker from `oracle-patterns.md`.
 - **Health checks only.** `/health` returning 200 is a liveness
   check, not a correctness check. Pair with: any consistency
   checker.
@@ -88,6 +92,14 @@ mechanisms section).
 - **Positive control only.** "The legitimate user could read" does
   not prove "the illegitimate user could not." Pair with: explicit
   negative controls in §7.M.S.
+- **Uncalibrated semantic checker.** A valid-case-only test can pass
+  when a constraint or setting is ignored. Demonstrate rejection of a
+  known-bad result/history; retain typed raw results so normalization
+  cannot erase duplicate rows, wrong types, or wrong-column responses.
+- **Unobserved execution paths.** WAL traffic does not prove table
+  flush or compaction coverage. Long client waits and retries can leave
+  critical windows unobserved. Record path evidence, checked-operation
+  counts, and observation gaps for the scope actually claimed.
 - **Latency-margin without per-group breakdown.** Aggregate p99
   meeting an SLO does not prove fairness. Pair with: per-group
   metrics via the fairness checker (`oracle-patterns.md` §14).

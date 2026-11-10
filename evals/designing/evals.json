@@ -18,6 +18,18 @@
       "prompt": "Quick design check — I'm changing a typo in a log line and removing two unused imports in a stateless HTTP handler. What's the right test plan?",
       "expected_output": "Early-exit. The skill should explicitly say 'this change does not warrant a distributed test plan' and recommend the lightest appropriate testing (e.g. existing unit tests, lint). Should NOT produce a ceremonial multi-scenario plan.",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Design a release-validation plan for a PostgreSQL-compatible SQL engine. Only single-node builds are available. It has integer, decimal and text columns, constraints, transactions, scans and joins. Current tests exercise integer primary-key reads and writes. We can run a reference PostgreSQL instance. Focus on safety before benchmarking; there is no existing plan.",
+      "expected_output": "Plan single-client semantic controls and differential generation before concurrent no-fault histories and targeted storage faults. Select SQL semantic coverage across types, mutation paths, scans/aggregates/joins, transaction lifecycle, and drivers/prepare thresholds. Declare multiset/ordering/type/error equivalence, bounded shrinking and narrow reviewed exclusions. Include transaction-local checking without assuming arbitrary concurrent schedules can be compared to a sequential reference. Do not claim replication coverage; no-fault campaigns retain model/history/checker and meaningful budget tiers.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Review this proposed durability/isolation plan for a database: docs call the default fast mode safe, CLI help says unsafe, and SET SERIALIZABLE returns success. All release binaries print the same version string. The plan runs kill -9, then checks health and a checksum-warning log. Tests currently generate only WAL files, although production flushes table files. What needs to change?",
+      "expected_output": "Preserve contradictory versioned claims; pin artifact digest, requested/effective settings, driver/checker identity and behavioral probes rather than trusting labels or SET success. Separate process death, unsynced-write loss, IO errors and silent corruption. Require actual table-file/flush coverage and client-visible recovery checks against acknowledged state or documented refusal/repair behavior. Health/checksum logging alone cannot establish safety. Flag untested paths rather than infer coverage.",
+      "files": []
     }
   ]
 }

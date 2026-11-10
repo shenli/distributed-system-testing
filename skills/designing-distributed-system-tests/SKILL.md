@@ -1,6 +1,7 @@
 ---
 name: designing-distributed-system-tests
-description: Use when designing a test plan for a distributed or stateful system — anything with persistence, replication, consensus, retries, idempotency, async messaging, multi-tenancy, or partial failure. Plans are claim-driven: investigate the product's claimed guarantees first, then design hypotheses and scenarios that try to falsify those claims under fault. Handles change-scoped plans (a commit / PR / feature) and project-wide plans (holistic, with existing-test inventory and gap analysis). Also use when asked to write a stability plan, fault matrix, release-validation plan, durability / partition / upgrade / crash-recovery / linearizability / deterministic-simulation plan, tenant isolation / authz / boundary plan, namespace isolation plan, fairness / noisy-neighbor plan, "what should we be testing", or "make a holistic test plan". Trigger even if the user just says "what should we test for this change", "are my tenants actually isolated", or "how do I test fairness across tenants / shards / queues".
+description: >-
+  Design claim-driven test plans for distributed or stateful systems with persistence, replication, consensus, retries, idempotency, async messaging, multi-tenancy, or partial failure. Supports change-scoped and project-wide plans, including existing-test inventories and gap analysis. Use for stability, release-validation, durability, partition, crash-recovery, upgrade, linearizability, deterministic-simulation, SQL semantics or compatibility, tenant isolation, authz, namespace boundaries, fairness, and noisy-neighbor testing. Investigate claimed guarantees and design scenarios to falsify them during normal operation and under relevant faults. Also use for "what should we test for this change", "are my tenants isolated", or "make a holistic test plan".
 ---
 
 # Designing Distributed-System Tests
@@ -111,6 +112,13 @@ inferred claims are still testable, and surfacing them often
 catches places where the docs lie or are silent about real
 guarantees the implementation depends on.
 
+Bind safety-critical claims to a version and configuration: artifact/build,
+startup mode, session settings, durability mode, and client/protocol.
+Preserve disagreements between manuals, CLI help, and observed defaults.
+Plan effective-setting inspection and distinguishing behavioral probes;
+an accepted setting, familiar alias, or "safe" label is not proof of a
+consistency model. Keep unresolved contradictions in §1c.
+
 When done, you should have a numbered claims list (C1, C2, …). The
 hypothesis-generation step (step 3) will reference these by number,
 the coverage matrix (template §5) tracks claim × hypothesis, and
@@ -198,6 +206,13 @@ more surfaces than any single change). Group hypotheses by subsystem
 so the gap-analysis table stays readable.
 
 ### 4. Select techniques
+
+Include meaningful no-fault correctness coverage before layering on faults:
+minimal supported deployment with one client, then concurrency where relevant.
+Reuse existing tests when they have a suitable oracle. For SQL semantics or
+compatibility claims, read `references/sql-semantic-testing.md` to select
+sequential differential and transaction-local checks. Fault injection does
+not substitute for validating basic state transitions.
 
 Open `references/catalog-index.md` and find the techniques that match
 your hypotheses. For each technique you pick, open its reference file
@@ -323,7 +338,9 @@ The §7.M sub-block:
   of that file. Or, if no checker, write the justification.
 - **Nemesis + landing evidence** — nemesis from the executing skill's
   `references/fault-injection-howto.md`, plus the observable signal
-  that proves the fault landed.
+  that proves the fault landed. For an intentionally no-fault scenario,
+  write `none — intentional no-fault correctness campaign`; retain the
+  model, history, checker, and budget requirements.
 - **Ambiguous outcomes** — how the recorder treats timeouts, unknowns,
   retries, duplicates.
 - **Reduction plan** — minimisation recipe + the SUT/harness/checker/
@@ -378,8 +395,10 @@ Release budgets per scenario:
 
 - **Smoke budget** — minimum config + duration + faults + seeds
   required for `PASS-smoke`.
-- **Hardening budget** — strictly stronger than smoke on every
-  dimension; required for `PASS-hardening`.
+- **Hardening budget** — stronger on relevant coverage dimensions
+  (cases, duration, operations, seeds, configurations); justify fixed
+  dimensions such as one node or zero injected faults. Required for
+  `PASS-hardening`; no-fault hardening supports only no-fault claims.
 - **Release budget** — long / repeated / statistical gate, OR an
   explicit `not provided — <reason>. Revisit when: <condition>.`
   declaration. Empty / "TBD" / "see §6b" are explicitly disallowed.
@@ -530,6 +549,9 @@ a ceremonial plan for changes that don't need one.
 
 - `references/catalog-index.md` — start here; selector page
 - `references/jepsen-and-elle.md`
+- `references/sql-semantic-testing.md` — SQL differential campaigns,
+  transaction-local models, and semantic coverage; read for SQL engine
+  or compatibility changes
 - `references/deterministic-simulation.md`
 - `references/chaos-and-fault-injection.md`
 - `references/fuzzing.md`

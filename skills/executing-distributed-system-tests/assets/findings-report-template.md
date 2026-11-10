@@ -26,7 +26,7 @@ aggregate verdict at `PARTIAL-surface`.
 
 | ID | Scenario | [Verdict][vt] | Oracle | Oracle execution evidence | Nemesis landing evidence | Artifact link |
 |---|---|---|---|---|---|---|
-| S1 | {{name}} | PASS-hardening / PASS-smoke / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model / NOT-RUN | {{property checked}} | {{e.g. "assertion fired 1000/1000", "Elle processed 4217 ops 0 anomalies"}} | {{e.g. "iptables counter 0→14,712 over the injection window; SUT raft log shows leader-lost", or "n/a — no fault (PASS-smoke)"}} | {{link to session log entry + artifacts}} |
+| S1 | {{name}} | PASS-hardening / PASS-smoke / FAIL-reproducible / FAIL-nondeterministic / INCONCLUSIVE-env / INCONCLUSIVE-oracle-too-weak / INCONCLUSIVE-fault-not-proven / PARTIAL-surface / PARTIAL-model / NOT-RUN | {{property checked}} | {{e.g. "assertion fired 1000/1000", "Elle processed 4217 ops 0 anomalies"}} | {{landing signal, or "N/A — explicitly planned no-fault campaign"; budget tier independently gates PASS}} | {{link to session log entry + artifacts, including run identity}} |
 
 [vt]: ../references/verdict-taxonomy.md
 
@@ -37,7 +37,7 @@ aggregate verdict at `PARTIAL-surface`.
 - **Scenario:** S{{n}}
 - **Hypothesis addressed:** H{{n}} from the plan
 - **What happened:** one paragraph, factual.
-- **Reproducer:** the minimal fault sequence that reproduces. If you
+- **Reproducer:** the minimal operation sequence and any required faults. If you
   did not minimize, say so and why.
 - **Reduction classification:** SUT / harness / checker / environment
   (pick exactly one per the "Classify blame before filing" section of
@@ -50,6 +50,9 @@ aggregate verdict at `PARTIAL-surface`.
   files. Link to artifacts under the session dir.
 - **Hypothesised root cause:** one paragraph; which subsystem owns it.
 - **Suggested next action:** one sentence.
+- **Fix status (if applicable):** vendor-reported / not reproduced within
+  stated budget / verified by regression rerun. Cite exact artifact,
+  configuration, reproducer and neighboring-case results for verification.
 
 (Repeat per finding.)
 
@@ -140,6 +143,9 @@ Per scenario, record the result of all ten numbered red-flag checks
 from `references/green-but-broken-red-flags.md` (cite evidence per
 checked item):
 
+Mark inapplicable checks with a reason. Fault-only checks are N/A for
+explicitly planned no-fault campaigns, not for a failed injector.
+
 - [ ] 1. Workload generator produced the expected ops/sec throughout
 - [ ] 2. Oracle ran on every intended cycle (cite the op count it
   consumed)
@@ -158,7 +164,7 @@ checked item):
   changed)
 - [ ] 10. Statistical claims replicated (one PASS is not PASS)
 
-Per-scenario weak-oracle audit — record the result of all fourteen
+Per-scenario weak-oracle audit — record the result of all
 items from the "Weak oracles" section of
 `references/green-but-broken-red-flags.md` (any unchecked → not
 eligible for `PASS-hardening`):
@@ -184,3 +190,7 @@ eligible for `PASS-hardening`):
   not a boundary claim)
 - [ ] Fairness oracle has a per-group breakdown, not aggregate-p99
   only (or N/A — not a fairness claim)
+- [ ] Semantic checker rejects known-bad controls and preserves raw typed
+  results (or N/A — no semantic checker)
+- [ ] Intended storage/execution paths and observation windows were
+  covered, with evidence and gaps disclosed

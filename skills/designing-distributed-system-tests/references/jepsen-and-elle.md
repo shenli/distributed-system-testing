@@ -3,7 +3,11 @@
 **Last verified:** 2026-05-16
 
 ## When to reach for it
-Use Jepsen and Elle when testing distributed correctness: consistency models, isolation levels, linearizability under concurrent clients with injected network faults. Builds automated test harnesses that find anomalies no human would manually trigger.
+Use Jepsen for stateful-system test orchestration, including single-node
+and no-fault workloads. Use Elle to check transactional histories against
+the claimed isolation model. Neither multiple nodes nor injected network
+faults are prerequisites. For SQL semantics beyond a register/list workload,
+read `sql-semantic-testing.md`.
 
 ## What it detects well
 - Lost updates; dirty reads; stale reads; lost writes under partition.
@@ -34,7 +38,11 @@ Per-scenario: 30 minutes to multiple hours of wall-clock time; Elle history anal
 ## How a plan typically uses it
 1. Name the consistency model claimed (linearizable / serializable / SI / RC / causal+ etc.).
 2. Pick generators that exercise the operations whose anomalies you care about.
-3. Pick a nemesis schedule with realistic partition shapes, not just symmetric ones.
+3. Run a no-fault baseline; when faults are relevant, pick a nemesis schedule with realistic partition shapes, not just symmetric ones.
 4. State which Elle anomaly classes count as failures vs. acceptable.
 5. Record ops history for offline re-analysis.
-6. Define minimum ops-per-run for statistical relevance (typically 10k+ ops per scenario).
+6. Define operations, duration, seeds, and successful-observation coverage
+   for the suspected failure rate; no universal operation count establishes
+   statistical confidence. Record the checker version and its inference
+   assumptions. Validate typed workload results before interpreting cycles:
+   wrong-row reads or malformed values can invalidate the inferred graph.

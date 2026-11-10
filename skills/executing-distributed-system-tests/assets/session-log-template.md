@@ -6,6 +6,10 @@
 **Session dir:** {{absolute_path}}
 **Operator:** {{agent / human}}
 
+**Run identity:** {{binary/image digest and reported version; harness,
+checker and driver versions; protocol; startup flags; requested/effective
+session and durability settings; link per-arm differences if applicable}}
+
 ## Toolbox discovered
 
 What test drivers, fault injectors, runbooks, and observability are
@@ -31,7 +35,7 @@ before any scenario runs; the findings report cites it per scenario.
 - [ ] Cluster brought up cleanly
 - [ ] Observability live (link to dashboard / metrics endpoint)
 - [ ] Baseline metric captured (link to artifact)
-- [ ] Fault-injection plane verified (proxy / chaos agent responsive)
+- [ ] Fault-injection plane verified (or N/A — plan explicitly has no faults)
 
 ## Scenario timeline
 

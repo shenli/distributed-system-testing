@@ -25,19 +25,18 @@ fields.
 
 ### `PASS-smoke`
 
-Happy path. No fault injected. Oracle ran on a complete history. No
-anomaly.
-
-Use as a sanity baseline only. A `PASS-smoke` is not evidence that
-the system honours the claim under fault — it is evidence that the
-test harness works at all. Multiple smokes in a row gives confidence
-the harness is stable; it does not give confidence the SUT is robust.
+The declared smoke budget was met, the oracle checked the complete
+required history, and no anomaly was found. A smoke run may include a
+small fault scenario. It supports only the conditions and budget tested;
+it does not establish the plan's hardening coverage.
 
 ### `PASS-hardening`
 
-Full plan: the declared nemesis fired, landing evidence was captured,
-the checker consumed a complete history covering the fault window, no
-anomaly was detected.
+The declared hardening budget was met and the checker consumed the
+complete required history without an anomaly. If faults were planned,
+each required fault landed with evidence and the history covers its window.
+An explicitly planned no-fault correctness campaign can earn this verdict;
+label its fault scope `none` and do not infer fault tolerance from it.
 
 This is the strongest PASS the skill produces. The §7d confidence
 statement should lean on `PASS-hardening` verdicts; `PASS-smoke`
@@ -96,10 +95,11 @@ the wrong interface, Toxiproxy enabled but the SUT was already
 talking direct to the backend, container restart immediately
 reversed by an orchestrator.
 
-This verdict means the scenario did not test what it claimed to
-test. The PASS or FAIL of the oracle is irrelevant — the fault was
-not proven to have landed, so the run does not move the confidence
-needle.
+This verdict means the planned fault coverage was not established.
+A valid oracle violation still takes precedence as a FAIL, but cannot
+be attributed to that fault without evidence. An explicitly planned
+no-fault campaign does not require landing evidence; a failed injector
+cannot be retroactively relabeled as an intentional no-fault campaign.
 
 ### `PARTIAL-surface`
 
@@ -159,9 +159,9 @@ Was the arm or scenario attempted at all?
         └─ no
             Was the planned fault proven to land?
             ├─ no
-            │   ├─ planned fault was scheduled? → INCONCLUSIVE-fault-not-proven
-            │   └─ no fault planned (smoke run)  → continue below
-            └─ yes (or smoke)
+            │   ├─ any fault required by plan? → INCONCLUSIVE-fault-not-proven
+            │   └─ explicitly no fault planned → continue below
+            └─ yes (or explicitly no fault planned)
                 Did the declared §7.M checker run?
                 ├─ no  → PARTIAL-surface
                 └─ yes (full)
@@ -171,16 +171,18 @@ Was the arm or scenario attempted at all?
                 │       Did the checker cover all ops the scenario produced?
                 │       ├─ no  → PARTIAL-model
                 │       └─ yes
-                │           Was a fault active in the run?
-                │           ├─ no  → PASS-smoke
-                │           └─ yes → PASS-hardening
+                │           Which declared budget was fully met?
+                │           ├─ hardening/release → PASS-hardening (name fault scope)
+                │           ├─ smoke only → PASS-smoke
+                │           └─ below smoke → INCONCLUSIVE-oracle-too-weak
 ```
 
 **Non-serious scenarios.** If §7.M was marked "not applicable" (the
 scenario does not falsify a claim in the gated set), the tree's
 checker-required nodes do not apply. Use the scenario's Oracle
-field as the success criterion: smoke run → `PASS-smoke`; fault
-active + Oracle passed → `PASS-hardening`.
+field as the success criterion, with the same planned-fault evidence
+and budget gates. Below-smoke runs cannot support a PASS; record the
+unmet minimum as the reason for `INCONCLUSIVE-oracle-too-weak`.
 
 The pre-execution branches at the top of the tree (NOT-RUN and
 INCONCLUSIVE-env) are mutually exclusive. NOT-RUN means the arm or

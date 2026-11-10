@@ -22,3 +22,8 @@ and SUT files such as `tools/agentdb-cluster-smoke` or
 repo. To reuse a prompt elsewhere, substitute your own SUT path and
 tooling. Prompt 3 in each file (early-exit / missing-oracle) is
 self-contained and runs anywhere.
+
+Prompts 4–5 are also self-contained: SQL semantic campaign design,
+configuration and storage-contract review, no-fault/budget verdicts,
+and differential-oracle/fix-evidence review. They are manual regression
+cases; adding them does not mean an independent agent evaluation ran.

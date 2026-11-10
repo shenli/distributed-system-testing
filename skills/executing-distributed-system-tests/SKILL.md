@@ -194,16 +194,21 @@ give the operator visible progress:
 For each scenario:
 
 1. **Preconditions check.** Cluster up cleanly, observability
-   live, baseline metric captured, fault plane responsive.
+   live, baseline metric captured, fault plane responsive if required.
+   Record the actual artifact digest/build, client/checker versions,
+   protocol, and effective settings; a version string alone may be stale.
 2. **Start workload** using the discovered driver.
-3. **Inject fault** per the plan schedule.
+3. **Inject fault** per the plan schedule. If the plan explicitly declares
+   no faults, record that scope and skip injection and landing checks.
 4. **Capture evidence the fault landed.** The plan's §7.M
    `Nemesis + landing evidence` field declares which observable
    signal proves the fault landed (counter, RPC timeout pattern,
    log marker, partition-status metric). Capture *that* signal,
    not a generic one. If the signal is absent or ambiguous, the
-   scenario verdict is `INCONCLUSIVE-fault-not-proven` (see
-   `references/verdict-taxonomy.md`) — never PASS.
+   scenario cannot PASS: use `INCONCLUSIVE-fault-not-proven` unless a
+   valid checker violation takes precedence as FAIL (see
+   `references/verdict-taxonomy.md`). Do not attribute that violation
+   to an unproven fault.
 
    For non-serious scenarios that did not declare §7.M (no gated
    claim category), capture a best-effort generic landing signal
@@ -219,8 +224,10 @@ For each scenario:
    PARTIAL-surface, PARTIAL-model, NOT-RUN. Apply the decision tree in
    that file to assign the verdict; do not free-form. Record the verdict
    together with the oracle execution evidence (op count consumed,
-   anomalies found) and the §7.M nemesis landing signal — both are
-   required for any PASS-hardening claim.
+   anomalies found) and the §7.M nemesis landing signal when faults were
+   planned. An intentional no-fault campaign retains all checker and
+   budget gates and may earn `PASS-hardening` for that no-fault scope.
+   Never relabel a failed injection as a no-fault campaign.
 
 **Per-arm execution for boundary and fairness scenarios.** When the
 plan's §7.M.S block declares scenario arms (e.g., `S5/api`,
@@ -270,6 +277,12 @@ Do not run the next scenario before recording:
 - Hypothesised root cause and owning subsystem.
 - Suggested next action.
 
+For a claimed fix, keep `vendor-reported`, `not reproduced within this
+budget`, and `verified by regression rerun` distinct. Verification needs
+the exact fixed artifact/configuration, original reproducer, oracle output,
+and relevant neighboring cases. A release note or clean short run alone
+does not close a safety finding.
+
 ### 6. Apply green-but-broken checks AND the weak-oracle audit
 
 Before declaring any scenario PASS, run both checklists in
@@ -282,7 +295,9 @@ Before declaring any scenario PASS, run both checklists in
    PASS from FAIL.
 
 Record the result of each check in the findings report's
-green-but-broken section. A serious scenario (one with §7.M filled)
+green-but-broken section; mark inapplicable checks with a reason (for
+example, landing evidence in an explicitly no-fault campaign). A serious
+scenario (one with §7.M filled)
 cannot be marked `PASS-hardening` if any weak-oracle check is
 unchecked; downgrade to `PARTIAL-surface` or `PARTIAL-model` per
 `references/verdict-taxonomy.md`.

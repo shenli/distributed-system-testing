@@ -18,6 +18,18 @@
       "prompt": "Run the plan at /tmp/plan-without-oracles.md (this plan has scenarios but the oracle column says 'logs look fine' for every scenario).",
       "expected_output": "Skill halts at the load-the-plan step and hands back to the design skill, citing that oracles are missing or non-machine-checkable. Should NOT improvise oracles and run the plan anyway.",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Classify these completed runs using the skills verdict rules; do not execute anything. A: explicitly planned no-fault SQL differential campaign, all hardening cases/configurations, three seeds and duration met, full typed histories checked with calibrated oracle, zero violations. B: planned partition campaign meets duration but injector missed the network path, zero violations. C: one successful crash test meets only the declared smoke budget, with complete history, proven injection and a clean oracle.",
+      "expected_output": "A is PASS-hardening with explicit no-fault scope and no fault-tolerance claim. B is INCONCLUSIVE-fault-not-proven and cannot be relabeled no-fault. C is PASS-smoke despite a real fault. Apply budget and evidence gates independently; no missing fault-tool request for A.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Review campaign findings without running tools: differential fuzzing spends almost all its time shrinking the same unique-constraint timing mismatch. The adapter converts result rows into sets and strings. Another run has a raw wrong-row response, but cannot reproduce it; the vendor says the next release fixes everything. How should the report and next run change?",
+      "expected_output": "Preserve duplicates and types with multiset/ordered comparisons under an explicit equivalence contract. Retain raw evidence, bound shrinking and deduplicate known divergences with narrow versioned exclusions, not broad feature suppression. Validate the wrong-row observation and checker assumptions, retain FAIL-nondeterministic when supported, and leave attribution unknown if unresolved. A vendor fix claim is vendor-reported, not verified: pin the fixed artifact, rerun the reproducer and neighboring cases, and disclose budget limits.",
+      "files": []
     }
   ]
 }

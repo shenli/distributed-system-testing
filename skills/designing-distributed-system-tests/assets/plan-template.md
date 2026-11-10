@@ -78,6 +78,11 @@ Every hypothesis in §4 and every scenario in §7 must reference at
 least one claim by ID. Untethered hypotheses produce ceremonial
 scenarios; drop them or surface the missing claim in §1c.
 
+For configuration-dependent claims, record the artifact/build, requested
+and effective startup/session settings, durability mode, client/protocol,
+versioned claim sources, and distinguishing probes. Name contradictions
+and unresolved settings in §1c; do not equate a mode label with a guarantee.
+
 ## 1c. Missing claims discovered
 
 Behaviors the implementation relies on for which no documented or
@@ -209,14 +214,16 @@ and runs.
 - **Closes:** H1, H2 (rows in §5)
 - **Technique:** {{from §6}}
 - **Workload:** {{generator, rate, key/op distribution, duration}}
-- **Faults:** {{schedule — what is injected, when, for how long}}
+- **Faults:** {{schedule — what is injected, when, for how long;
+  or "none — intentional no-fault correctness campaign"}}
 - **Oracle:** {{the property checked and how}}
 - **Observability required:** {{logs, metrics, traces, dumps}}
 - **Smoke budget:** {{minimum config size, run duration, fault count,
   and seed count required to produce `PASS-smoke`. Example: 2 tenants
   × 60s × 1 fault × 1 seed.}}
-- **Hardening budget:** {{strictly stronger than smoke on every
-  dimension; required to produce `PASS-hardening`. Example: 8 tenants
+- **Hardening budget:** {{stronger than smoke on relevant coverage
+  dimensions; justify fixed dimensions such as one node or zero faults.
+  Required to produce `PASS-hardening`. Example: 8 tenants
   × 30min × 5 nemesis windows × 3 seeds.}}
 - **Release budget:** {{long / repeated / statistical gate; required
   to mark the claim as ready to ship to production. OR an explicit
@@ -296,6 +303,8 @@ falsified)` and skip the fields below.
   *observable signal* that proves the fault landed (RPC timeout rate
   jump, iptables packet counter, log marker, partition-status
   metric). "The injector reported success" is not landing evidence.
+  For a planned no-fault campaign, write `none — intentional no-fault
+  correctness campaign`; checker/history requirements still apply.
 - **Ambiguous outcomes:** how the recorder treats timeouts, unknown
   commits, retries, and duplicate responses. Default: timeouts get
   `timeout_marker = true` with `complete_ts = null`; retries are

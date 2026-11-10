@@ -26,6 +26,7 @@ pick the technique that exercises it.
 | Suspect this could break... | Reach for... |
 |---|---|
 | Linearizability / serializability under concurrent ops + faults | `jepsen-and-elle.md` |
+| SQL semantics, transaction-local state, or database compatibility | `sql-semantic-testing.md` + `property-and-metamorphic.md` |
 | Crash mid-operation, replay, or fsync loss correctness | `crash-recovery-and-upgrade.md` |
 | Non-deterministic interleavings that "passed in CI" | `deterministic-simulation.md` or `fuzzing.md` |
 | Partial network partitions, asymmetric loss, clock skew | `chaos-and-fault-injection.md` |

@@ -117,7 +117,7 @@ Oracle:                   <the per-arm property checked; must
                           controls>
 Minimum smoke budget:     <configuration size, run duration, fault
                           count, seed count required for PASS-smoke>
-Minimum hardening budget: <strictly stronger than smoke on every
+Minimum hardening budget: <stronger than smoke on relevant coverage
                           dimension; required for PASS-hardening>
 ```
 

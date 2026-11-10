@@ -17,6 +17,7 @@ sections below for how to actually run the chosen checker.
 | register         | safety               | linearizability (Porcupine / Knossos)                     |
 | log              | durability           | no-lost-ack + replay-equivalence                          |
 | map              | isolation            | serializability (Elle) per-key + cross-key                |
+| SQL relation / transaction | safety / isolation | typed differential (§6) + transaction-local model (§15); Elle for supported inter-transaction histories |
 | session          | safety               | session-consistency / monotonic-read                      |
 | ledger           | idempotency          | exactly-once dedup checker on op id                       |
 | membership-table | membership           | reconciliation-across-replicas at quiescence              |
@@ -77,8 +78,15 @@ checker" and justify per the §7.M block in the designing skill's
 ### 6. Cross-implementation differential
 - **When:** you have a reference implementation (or a model) to
   compare against.
-- **How:** send the same ops to both, diff outputs.
-- **Failure mode:** the reference has the same bug.
+- **How:** run the same sequential operations from equivalent initial
+  state, compare typed outputs and post-error state using a declared
+  equivalence relation. Preserve row multiplicity; only compare ordering
+  where specified. For SQL, read the design skill's
+  `references/sql-semantic-testing.md` for normalization and exclusions.
+- **Failure mode:** the reference shares the bug, legitimate dialect
+  differences dominate, or normalization hides corruption. Pin both
+  implementations and bound shrinking per divergence signature. This
+  does not validate arbitrary concurrent schedules.
 
 ### 7. Session-consistency checker
 - **When:** the claim is "reads honour the writes my session has issued so far" — read-your-writes / monotonic-read / read-after-write within a session.
@@ -100,8 +108,14 @@ checker" and justify per the §7.M block in the designing skill's
 
 ### 10. No-lost-ack checker
 - **When:** the claim is "every acknowledged write appears in the final state".
-- **How:** scan history for ops with non-null `output` (succeeded), collect their `input` values, then query the SUT's final state at quiescence and assert every collected value is present.
-- **Inputs:** history with `output` and `timeout_marker`; SUT final-state dump.
+- **How:** identify explicit successful acknowledgements from the API
+  contract (for transactions, successful commit rather than statement
+  success); a non-null output alone is not a success marker. For an
+  append-only workload, compare acknowledged elements with quiescent
+  state. For updates/deletes, model legal overwrites and removals instead
+  of requiring every historical value to remain present.
+- **Inputs:** history with explicit completion/commit status, `output`,
+  and `timeout_marker`; SUT final-state dump.
 - **Failure mode:** treating timeouts (`timeout_marker = true`) as acknowledged. Timeouts are NOT acknowledged — they are unknown. The checker must ignore timed-out ops, not treat them as either acked or rejected.
 
 ### 11. Exactly-once / idempotency checker
@@ -146,6 +160,22 @@ checker" and justify per the §7.M block in the designing skill's
   unfairness — e.g., aggregating across regions hides per-region
   starvation. The group dimension must match the boundary the
   fairness claim is about.
+
+### 15. Transaction-local model
+
+- **When:** statements must observe the transaction's own preceding
+  effects, or errors/rollback must preserve the documented atomicity.
+- **How:** compare statement-level typed observations with an independent
+  model, including affected-row counts and reads through relevant access
+  paths. In a single-client run, exact state simulation is possible.
+  Under concurrency, assert only facts entailed by the isolation contract,
+  observed state, and own writes; do not impose a fixed snapshot on RC.
+- **Inputs:** schema, ordered statements/bindings, raw typed results,
+  errors, transaction/session identifiers, and commit/abort/unknown status.
+- **Failure mode:** treating statement success as commit, trusting an
+  aggregate while ignoring disagreeing scans, or using a sequential model
+  to reject legal concurrent behavior. This checker complements rather
+  than replaces inter-transaction isolation analysis.
 
 ## Required for every oracle
 
